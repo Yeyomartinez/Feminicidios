@@ -29,7 +29,8 @@ LAYERS = {
     "ea_vendedor_proveedor_arma":{"label":"Vendedores / Proveedores Arma","table":"ea_vendedor_proveedor_arma","geom":"geom","color":"#B91C1C","radius":28,"blur":20,"intensity":0.9,"filter":None,"tot_table":None,"icon":"🔫","type":"point","module":"EA"},
     "em_equipamiento_urbano":{"label":"Equipamiento Urbano","table":"em_equipamiento_urbano","geom":"geom","color":"#00C9D4","radius":28,"blur":20,"intensity":0.6,"filter":"activo = true","tot_table":None,"icon":"🏛️","type":"point","module":"EM"},
     "em_proximidad_equipamiento":{"label":"Proximidad Equipamiento","table":"em_proximidad_equipamiento","geom":"geom_ruta","color":"#22D3EE","radius":None,"blur":None,"intensity":None,"filter":"geom_ruta IS NOT NULL","tot_table":None,"icon":"📐","type":"line","module":"EM"},
-    "em_ruta_movilidad":{"label":"Rutas de Movilidad","table":"em_ruta_movilidad","geom":"geom","color":"#FCD34D","radius":None,"blur":None,"intensity":None,"filter":"geom IS NOT NULL","tot_table":None,"icon":"🛣️","type":"line","module":"EM"},
+    "em_ruta_movilidad_v":{"label":"Rutas Movilidad — Víctima","table":"em_ruta_movilidad","geom":"geom","color":"#FCD34D","radius":None,"blur":None,"intensity":None,"filter":"id_victima IS NOT NULL AND geom IS NOT NULL","tot_table":None,"icon":"🛣️","type":"line","module":"EM","role":"victima"},
+    "em_ruta_movilidad_a":{"label":"Rutas Movilidad — Atacante","table":"em_ruta_movilidad","geom":"geom","color":"#F97316","radius":None,"blur":None,"intensity":None,"filter":"id_atacante IS NOT NULL AND geom IS NOT NULL","tot_table":None,"icon":"🛣️","type":"line","module":"EM","role":"atacante"},
     "red_vial":{"label":"Red Vial","table":"red_vial","geom":"geom","color":"#94A3B8","radius":None,"blur":None,"intensity":None,"filter":None,"tot_table":None,"icon":"🛤️","type":"line","module":"EM"},
     "sc_incidente_convivencia":{"label":"Incidentes Convivencia","table":"sc_incidente_convivencia","geom":"geom","color":"#FFCA3A","radius":25,"blur":18,"intensity":0.7,"filter":None,"tot_table":"tot_incidentes_periodo","icon":"🟡","type":"point","module":"SC"},
     "sc_punto_microtrafico":{"label":"Puntos Microtrafico","table":"sc_punto_microtrafico","geom":"geom","color":"#FF6B35","radius":30,"blur":20,"intensity":0.8,"filter":"estado = 'activo'","tot_table":"tot_microtrafico_zona","icon":"🟠","type":"point","module":"SC"},
@@ -43,12 +44,17 @@ LAYERS = {
     "te_topografia":{"label":"Topografia","table":"te_topografia","geom":"geom","color":"#84CC16","radius":None,"blur":None,"intensity":None,"filter":None,"tot_table":None,"icon":"⛰️","type":"polygon","module":"TE","color_field":"tipo_relieve"},
     "te_tratamiento":{"label":"Tratamiento Urbanistico","table":"te_tratamiento","geom":"geom","color":"#A855F7","radius":None,"blur":None,"intensity":None,"filter":None,"tot_table":None,"icon":"🔮","type":"polygon","module":"TE","color_field":"tipo"},
     "te_uso_suelo":{"label":"Uso de Suelo","table":"te_uso_suelo","geom":"geom","color":"#06B6D4","radius":None,"blur":None,"intensity":None,"filter":None,"tot_table":None,"icon":"🗾","type":"polygon","module":"TE","color_field":"categoria"},
-    "tv_lugar_asilo_refugio":{"label":"Asilo / Refugio","table":"tv_lugar_asilo_refugio","geom":"geom","color":"#0EA5E9","radius":25,"blur":18,"intensity":0.7,"filter":None,"tot_table":None,"icon":"🏠","type":"point","module":"TV"},
-    "tv_lugar_crianza":{"label":"Lugar de Crianza","table":"tv_lugar_crianza","geom":"geom","color":"#22C55E","radius":28,"blur":20,"intensity":0.7,"filter":None,"tot_table":None,"icon":"🟢","type":"point","module":"TV"},
-    "tv_lugar_estudio":{"label":"Lugar de Estudio","table":"tv_lugar_estudio","geom":"geom","color":"#3B82F6","radius":25,"blur":18,"intensity":0.7,"filter":None,"tot_table":None,"icon":"📚","type":"point","module":"TV"},
-    "tv_lugar_recreacion":{"label":"Lugar de Recreacion","table":"tv_lugar_recreacion","geom":"geom","color":"#F472B6","radius":25,"blur":18,"intensity":0.7,"filter":None,"tot_table":None,"icon":"⚽","type":"point","module":"TV"},
-    "tv_lugar_residencia":{"label":"Lugar de Residencia","table":"tv_lugar_residencia","geom":"geom","color":"#9B6DFF","radius":30,"blur":22,"intensity":0.9,"filter":None,"tot_table":None,"icon":"🟣","type":"point","module":"TV"},
-    "tv_lugar_trabajo":{"label":"Lugar de Trabajo","table":"tv_lugar_trabajo","geom":"geom","color":"#FB923C","radius":25,"blur":18,"intensity":0.7,"filter":None,"tot_table":None,"icon":"💼","type":"point","module":"TV"},
+    "tv_lugar_asilo_refugio":{"label":"Asilo / Refugio — Víctima","table":"tv_lugar_asilo_refugio","geom":"geom","color":"#0EA5E9","radius":25,"blur":18,"intensity":0.7,"filter":"id_victima IS NOT NULL","tot_table":None,"icon":"🏠","type":"point","module":"TV","role":"victima"},
+    "tv_lugar_crianza_v":{"label":"Crianza — Víctima","table":"tv_lugar_crianza","geom":"geom","color":"#22C55E","radius":28,"blur":20,"intensity":0.7,"filter":"id_victima IS NOT NULL","tot_table":None,"icon":"🟢","type":"point","module":"TV","role":"victima"},
+    "tv_lugar_crianza_a":{"label":"Crianza — Atacante","table":"tv_lugar_crianza","geom":"geom","color":"#DC2626","radius":28,"blur":20,"intensity":0.7,"filter":"id_atacante IS NOT NULL","tot_table":None,"icon":"🔴","type":"point","module":"TV","role":"atacante"},
+    "tv_lugar_estudio_v":{"label":"Estudio — Víctima","table":"tv_lugar_estudio","geom":"geom","color":"#3B82F6","radius":25,"blur":18,"intensity":0.7,"filter":"id_victima IS NOT NULL","tot_table":None,"icon":"📚","type":"point","module":"TV","role":"victima"},
+    "tv_lugar_estudio_a":{"label":"Estudio — Atacante","table":"tv_lugar_estudio","geom":"geom","color":"#EA580C","radius":25,"blur":18,"intensity":0.7,"filter":"id_atacante IS NOT NULL","tot_table":None,"icon":"📕","type":"point","module":"TV","role":"atacante"},
+    "tv_lugar_recreacion_v":{"label":"Recreación — Víctima","table":"tv_lugar_recreacion","geom":"geom","color":"#F472B6","radius":25,"blur":18,"intensity":0.7,"filter":"id_victima IS NOT NULL","tot_table":None,"icon":"⚽","type":"point","module":"TV","role":"victima"},
+    "tv_lugar_recreacion_a":{"label":"Recreación — Atacante","table":"tv_lugar_recreacion","geom":"geom","color":"#B91C1C","radius":25,"blur":18,"intensity":0.7,"filter":"id_atacante IS NOT NULL","tot_table":None,"icon":"🔺","type":"point","module":"TV","role":"atacante"},
+    "tv_lugar_residencia_v":{"label":"Residencia — Víctima","table":"tv_lugar_residencia","geom":"geom","color":"#9B6DFF","radius":30,"blur":22,"intensity":0.9,"filter":"id_victima IS NOT NULL","tot_table":None,"icon":"🟣","type":"point","module":"TV","role":"victima"},
+    "tv_lugar_residencia_a":{"label":"Residencia — Atacante","table":"tv_lugar_residencia","geom":"geom","color":"#9F1239","radius":30,"blur":22,"intensity":0.9,"filter":"id_atacante IS NOT NULL","tot_table":None,"icon":"🔴","type":"point","module":"TV","role":"atacante"},
+    "tv_lugar_trabajo_v":{"label":"Trabajo — Víctima","table":"tv_lugar_trabajo","geom":"geom","color":"#FB923C","radius":25,"blur":18,"intensity":0.7,"filter":"id_victima IS NOT NULL","tot_table":None,"icon":"💼","type":"point","module":"TV","role":"victima"},
+    "tv_lugar_trabajo_a":{"label":"Trabajo — Atacante","table":"tv_lugar_trabajo","geom":"geom","color":"#991B1B","radius":25,"blur":18,"intensity":0.7,"filter":"id_atacante IS NOT NULL","tot_table":None,"icon":"🗡️","type":"point","module":"TV","role":"atacante"},
 }
 
 
@@ -56,7 +62,7 @@ LAYERS = {
 def get_layers():
     return {
         "modules":[{"id":k,"label":v["label"],"color":v["color"],"icon":v["icon"]} for k,v in MODULES.items()],
-        "layers":[{"id":k,"label":v["label"],"color":v["color"],"icon":v["icon"],"has_stats":v["tot_table"] is not None,"type":v.get("type","point"),"module":v.get("module","EA"),"color_field":v.get("color_field")} for k,v in LAYERS.items()],
+        "layers":[{"id":k,"label":v["label"],"color":v["color"],"icon":v["icon"],"has_stats":v["tot_table"] is not None,"type":v.get("type","point"),"module":v.get("module","EA"),"color_field":v.get("color_field"),"role":v.get("role")} for k,v in LAYERS.items()],
     }
 
 @app.get("/territory/geojson")
@@ -252,9 +258,12 @@ POINT_LAYERS_FOR_ANALYSIS = {
     "sc_punto_microtrafico":    {"label":"Puntos Microtrafico",   "color":"#FF6B35","table":"sc_punto_microtrafico",    "geom":"geom","filter":"estado = 'activo'"},
     "sc_incidente_convivencia": {"label":"Incidentes Convivencia","color":"#FFCA3A","table":"sc_incidente_convivencia", "geom":"geom","filter":None},
     "em_equipamiento_urbano":   {"label":"Equipamiento Urbano",   "color":"#00C9D4","table":"em_equipamiento_urbano",   "geom":"geom","filter":"activo = true"},
-    "tv_lugar_residencia":      {"label":"Residencias",           "color":"#9B6DFF","table":"tv_lugar_residencia",      "geom":"geom","filter":None},
-    "tv_lugar_crianza":         {"label":"Lugar de Crianza",      "color":"#22C55E","table":"tv_lugar_crianza",         "geom":"geom","filter":None},
-    "tv_lugar_trabajo":         {"label":"Lugar de Trabajo",      "color":"#FB923C","table":"tv_lugar_trabajo",         "geom":"geom","filter":None},
+    "tv_lugar_residencia_v":    {"label":"Residencia — Víctima",  "color":"#9B6DFF","table":"tv_lugar_residencia","geom":"geom","filter":"id_victima IS NOT NULL"},
+    "tv_lugar_residencia_a":    {"label":"Residencia — Atacante", "color":"#9F1239","table":"tv_lugar_residencia","geom":"geom","filter":"id_atacante IS NOT NULL"},
+    "tv_lugar_crianza_v":       {"label":"Crianza — Víctima",     "color":"#22C55E","table":"tv_lugar_crianza",  "geom":"geom","filter":"id_victima IS NOT NULL"},
+    "tv_lugar_crianza_a":       {"label":"Crianza — Atacante",    "color":"#DC2626","table":"tv_lugar_crianza",  "geom":"geom","filter":"id_atacante IS NOT NULL"},
+    "tv_lugar_trabajo_v":       {"label":"Trabajo — Víctima",     "color":"#FB923C","table":"tv_lugar_trabajo",  "geom":"geom","filter":"id_victima IS NOT NULL"},
+    "tv_lugar_trabajo_a":       {"label":"Trabajo — Atacante",    "color":"#991B1B","table":"tv_lugar_trabajo",  "geom":"geom","filter":"id_atacante IS NOT NULL"},
 }
 
 

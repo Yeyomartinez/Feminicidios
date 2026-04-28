@@ -288,6 +288,67 @@ font-size:14px;font-weight:bold;display:flex;align-items:center;
 justify-content:center;box-shadow:3px 0 10px rgba(0,0,0,.6);
 transition:left .3s,background .15s;user-select:none;}
 #pt:hover{background:#111426;color:#E4E9F7}
+
+/* Role badges — victim / attacker */
+.role-v{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:20px;
+  font-family:var(--fM);font-size:6px;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;
+  background:rgba(59,130,246,.12);color:#93C5FD;border:1px solid rgba(59,130,246,.25)}
+.role-a{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:20px;
+  font-family:var(--fM);font-size:6px;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;
+  background:rgba(220,38,38,.12);color:#FCA5A5;border:1px solid rgba(220,38,38,.25)}
+/* Interactive legend toggle buttons */
+.leg-tog{display:flex;align-items:center;gap:5px;margin-bottom:4px;font-family:var(--fM);font-size:7.5px;cursor:pointer;padding:3px 6px;border-radius:5px;transition:background .12s;border:none;background:none;color:var(--tx2);width:100%;text-align:left}
+.leg-tog:hover{background:rgba(255,255,255,.04)}
+.leg-tog.off{opacity:.4}
+.leg-tog-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.leg-tog-sq{width:11px;height:8px;border-radius:2px;opacity:.7;flex-shrink:0}
+.leg-tog-line{width:18px;height:2px;border-radius:1px;flex-shrink:0}
+
+/* Active Order Panel */
+#aopSplit{
+  height:6px;flex-shrink:0;cursor:ns-resize;
+  background:var(--bg);border-top:2px solid var(--red);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:3;
+}
+#aopSplit::after{
+  content:'';width:36px;height:3px;
+  border-radius:2px;background:var(--ln2);
+}
+#aopSplit:hover::after{background:var(--red)}
+#aopWrap{
+  flex-shrink:0;height:140px;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);
+}
+#aopWrap.aop-closed{height:28px}
+#aopWrap.aop-closed #aopBody{display:none}
+#aopHd{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 12px 4px;flex-shrink:0;
+  cursor:pointer;user-select:none;
+}
+#aopHdLbl{font-family:var(--fM);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);flex:1}
+#aopCnt{font-family:var(--fD);font-size:11px;color:var(--red)}
+#aopArr{font-size:7px;color:var(--tx3);transition:transform .18s}
+#aopWrap.aop-closed #aopArr{transform:rotate(-90deg)}
+#aopBody{flex:1;overflow-y:auto;padding:0 8px 6px}
+#aopBody::-webkit-scrollbar{width:3px}
+#aopBody::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px}
+.aop-hint{font-family:var(--fM);font-size:6px;color:var(--tx3);text-align:center;padding:2px 0 4px;letter-spacing:.07em}
+.aop-empty{font-family:var(--fM);font-size:7.5px;color:var(--tx3);text-align:center;padding:8px 0}
+.aop-row{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:6px;margin-bottom:3px;background:var(--s2);border:1px solid var(--ln)}
+.aop-row.aop-over{border-top:2px solid var(--red);background:rgba(255,56,96,.08)}
+.aop-row.aop-drag{opacity:.2}
+.aop-hdl{font-size:13px;color:var(--tx3);cursor:grab;flex-shrink:0;user-select:none}
+.aop-hdl:active{cursor:grabbing}
+.aop-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.aop-name{font-family:var(--fM);font-size:8px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aop-rv{font-family:var(--fM);font-size:6px;padding:1px 4px;border-radius:20px;flex-shrink:0}
+.aop-rv.v{background:rgba(59,130,246,.12);color:#93C5FD;border:1px solid rgba(59,130,246,.2)}
+.aop-rv.a{background:rgba(220,38,38,.12);color:#FCA5A5;border:1px solid rgba(220,38,38,.2)}
+.aop-x{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px;flex-shrink:0;padding:0;line-height:1}
+.aop-x:hover{color:var(--red)}
 </style>
 </head>
 <body>
@@ -340,12 +401,24 @@ transition:left .3s,background .15s;user-select:none;}
       <div class="act-bar">
         <span class="act-bar-l">Capas activas</span>
         <div class="act-bar-r">
-          <span class="act-count" id="actN">0</span><span class="act-slash">/</span><span class="act-max">5</span>
-          <div class="act-dots"><div class="act-dot" id="d0"></div><div class="act-dot" id="d1"></div><div class="act-dot" id="d2"></div><div class="act-dot" id="d3"></div><div class="act-dot" id="d4"></div></div>
+          <span class="act-count" id="actN">0</span><span class="act-slash">/</span><span class="act-max">10</span>
+          <div class="act-dots"><div class="act-dot" id="d0"></div><div class="act-dot" id="d1"></div><div class="act-dot" id="d2"></div><div class="act-dot" id="d3"></div><div class="act-dot" id="d4"></div><div class="act-dot" id="d5"></div><div class="act-dot" id="d6"></div><div class="act-dot" id="d7"></div><div class="act-dot" id="d8"></div><div class="act-dot" id="d9"></div></div>
         </div>
       </div>
       <button class="clear-btn" onclick="clearExplore()">✕ Limpiar todo — Explorar</button>
       <div class="lb" id="lb"></div>
+      <div id="aopSplit"></div>
+      <div id="aopWrap">
+        <div id="aopHd" onclick="aopToggle()">
+          <span id="aopHdLbl">Orden capas activas</span>
+          <span id="aopCnt">0</span>
+          <span id="aopArr">▶</span>
+        </div>
+        <div id="aopBody">
+          <div class="aop-hint">▲ arriba = encima en mapa · arrastra ⠿ para reordenar</div>
+          <div id="aopList"><div class="aop-empty">Sin capas activas</div></div>
+        </div>
+      </div>
     </div>
 
     <!-- ── COMPARAR ── -->
@@ -481,7 +554,7 @@ function apiFetch(url, opts={}) {
     }
   });
 }
-const MAX_LAYERS = 5;
+const MAX_LAYERS = 10;
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let map1, map2;
@@ -707,8 +780,9 @@ function refreshRow(id){
   btn.classList.toggle("on",isActive);btn.style.setProperty("--lc",cfg.color);btn.textContent=isActive?"👁":"○";
   const modActN=document.getElementById(`mact-${cfg.module}`);
   if(modActN){const n=Object.keys(activeLayers).filter(lid=>LAYER_CATALOG[lid]?.module===cfg.module).length;modActN.textContent=n;modActN.classList.toggle("show",n>0)}
+  aopRender();
 }
-function updateCounter(){const n=Object.keys(activeLayers).length;document.getElementById("actN").textContent=n;for(let i=0;i<5;i++)document.getElementById(`d${i}`)?.classList.toggle("on",i<n)}
+function updateCounter(){const n=Object.keys(activeLayers).length;document.getElementById("actN").textContent=n;for(let i=0;i<10;i++)document.getElementById(`d${i}`)?.classList.toggle("on",i<n);aopRender();}
 
 // ── COMPARE ────────────────────────────────────────────────────────────────────
 // ── COMPARE: toggle layer on/off for a map side ──────────────────────────────
@@ -827,14 +901,36 @@ function buildLegend(){
   document.getElementById("legB").innerHTML=html;
 }
 function buildLayerLegendHTML(id,cfg){
+  // Role badge
+  const roleLbl = cfg.role==="victima" ? `<span class="role-v" style="margin-left:5px">♀ víctima</span>`
+                : cfg.role==="atacante"? `<span class="role-a" style="margin-left:5px">⚡ atacante</span>`
+                : "";
   let sym=cfg.type==="line"?`<div class="sym-line" style="background:${cfg.color};width:18px"></div>`:cfg.type==="polygon"?`<div class="sym-sq" style="background:${cfg.color}55;border:2px solid ${cfg.color};width:12px;height:9px"></div>`:`<div class="sym-circle" style="background:${cfg.color};width:9px;height:9px"></div>`;
-  let html=`<div class="leg-row">${sym}<span>${cfg.label}</span></div>`;
-  if(cfg.type==="point"){html+=`<div class="leg-sec">Intensidad calor</div><div class="leg-row"><div class="sym-grad" style="background:linear-gradient(to right,#00006F,${cfg.color})"></div><span>baja → alta</span></div>`}
+  // Interactive toggle button for this layer's visibility
+  let html=`<button class="leg-tog" id="legtog-${id}" onclick="toggleLegTog('${id}')">${sym}<span style="flex:1">${cfg.label}</span>${roleLbl}</button>`;
+  if(cfg.type==="point"&&!cfg.role){html+=`<div class="leg-sec">Intensidad calor</div><div class="leg-row"><div class="sym-grad" style="background:linear-gradient(to right,#00006F,${cfg.color})"></div><span>baja → alta</span></div>`}
+  if(cfg.type==="point"&&cfg.role){html+=`<div style="font-family:var(--fM);font-size:6.5px;color:var(--tx3);padding-left:6px;margin-bottom:3px">Gradiente calor → <span style="color:${cfg.color}">${cfg.color}</span></div>`}
   if(cfg.type==="polygon"&&cfg.color_field){
     const state=activeLayers[id],vals=state?.geoData?.geojson?.features?[...new Set(state.geoData.geojson.features.map(f=>f.properties?.[cfg.color_field]).filter(Boolean))]:[];
     if(vals.length){html+=`<div class="leg-sec">${cfg.color_field}</div><div class="leg-catbox">`;vals.slice(0,10).forEach(v=>{const c=hashColor(v);html+=`<div class="leg-row" style="margin-bottom:3px"><div class="sym-sq" style="background:${c}55;border:1.5px solid ${c};width:10px;height:8px"></div><span style="font-size:7px">${v}</span></div>`});if(vals.length>10)html+=`<div style="font-family:var(--fM);font-size:6.5px;color:var(--tx3);margin-top:2px">+${vals.length-10} mas</div>`;html+=`</div>`}
   }
   return html;
+}
+
+// Toggle a layer's visibility from the legend button
+function toggleLegTog(id){
+  const state=activeLayers[id]; if(!state) return;
+  const btn=document.getElementById('legtog-'+id);
+  const hidden=btn.classList.toggle('off');
+  // Hide/show heat + point layers
+  [state.leafletLayer, state.ptLayer].forEach(l=>{
+    if(!l) return;
+    try{ hidden ? map1.removeLayer(l) : l.addTo(map1); }catch(e){}
+  });
+  // Hide/show geo layer
+  if(state.leafletLayer && activeLayers[id]?.geoData){
+    try{ hidden ? map1.removeLayer(state.leafletLayer) : state.leafletLayer.addTo(map1); }catch(e){}
+  }
 }
 
 // ── STATS PANEL ────────────────────────────────────────────────────────────────
@@ -878,7 +974,8 @@ function buildPanel(modules,layers){
         const typeLbl=l.type==="point"?"Pto":l.type==="polygon"?"Pol":"Lin";
         const statsBtn=l.has_stats?`<button class="stat-btn" onclick="openStats('${l.id}')" title="Ver estadísticas">📊</button>`:"";
         const eyeBtn=`<button class="eye-btn" id="eye-${l.id}" style="--lc:${l.color}" onclick="toggleLayer('${l.id}')">○</button>`;
-        return`<div class="lrow2" id="lr-${l.id}" style="--lc:${l.color}">${eyeBtn}<div class="lico2" style="background:${l.color}18">${l.icon}</div><div style="flex:1;min-width:0"><div class="lnm2">${l.label}</div><div class="lct2" id="ct-${l.id}">—</div></div><span class="tbadge ${l.type}">${typeLbl}</span>${statsBtn}</div>`;
+        const roleBadge=l.role==="victima"?`<span class="role-v">♀ víctima</span>`:l.role==="atacante"?`<span class="role-a">⚡ atacante</span>`:"";
+        return`<div class="lrow2" id="lr-${l.id}" style="--lc:${l.color}">${eyeBtn}<div class="lico2" style="background:${l.color}18">${l.icon}</div><div style="flex:1;min-width:0"><div class="lnm2">${l.label}</div><div class="lct2" id="ct-${l.id}">—</div></div>${roleBadge}<span class="tbadge ${l.type}">${typeLbl}</span>${statsBtn}</div>`;
       }).join("");
       return`<div class="mod-folder ${isOpen?"open":""}" id="mf-${mod.id}">
         <div class="mod-hd" onclick="toggleFolder('${mod.id}')">
@@ -905,9 +1002,11 @@ function buildPanel(modules,layers){
         </div>
         <div class="mod-body">${mLayers.map(l=>{
           const typeLbl=l.type==="point"?"Pto":l.type==="polygon"?"Pol":"Lin";
+          const cmpRoleBadge=l.role==="victima"?`<span class="role-v">♀</span>`:l.role==="atacante"?`<span class="role-a">⚡</span>`:"";
           return`<div class="lrow2" style="--lc:${l.color}">
             <div class="lico2" style="background:${l.color}18">${l.icon}</div>
             <div style="flex:1;min-width:0"><div class="lnm2">${l.label}</div></div>
+            ${cmpRoleBadge}
             <span class="tbadge ${l.type}">${typeLbl}</span>
             <button class="cmp-add-btn A" id="cmpA-${l.id}" onclick="toggleCmpLayer('A','${l.id}')" title="Mapa A">A</button>
             <button class="cmp-add-btn B" id="cmpB-${l.id}" onclick="toggleCmpLayer('B','${l.id}')" title="Mapa B">B</button>
@@ -1050,13 +1149,13 @@ async function loadAnalysisLayers() {
     ["bufLayer","corrA","corrB"].forEach(sid => {
       const sel = document.getElementById(sid);
       if (!sel) return;
-      sel.innerHTML = anLayers.map(l =>
-        `<option value="${l.id}">${l.label}</option>`
-      ).join("");
+      sel.innerHTML = anLayers.map(l => {
+        const roleLbl = l.role==="victima" ? " [♀]" : l.role==="atacante" ? " [⚡]" : "";
+        return `<option value="${l.id}">${l.label}${roleLbl}</option>`;
+      }).join("");
     });
-    // corrB default a segunda opción
     const cb = document.getElementById("corrB");
-    if (cb && cb.options.length > 1) cb.selectedIndex = 1;
+    if(cb && cb.options.length>1) cb.selectedIndex=1;
   } catch(e) { console.warn("anLayers:", e) }
 }
 
@@ -1235,6 +1334,114 @@ async function init(){
     console.error(e);
   }
 }
+
+// ══════════════════════════════════════════════════════
+// ACTIVE ORDER PANEL — defined here so it exists before init()
+// ══════════════════════════════════════════════════════
+let _aopDrag = null;
+
+function aopToggle(){
+  document.getElementById('aopWrap').classList.toggle('aop-closed');
+}
+
+function aopRender(){
+  const list  = document.getElementById('aopList');
+  const cntEl = document.getElementById('aopCnt');
+  if(!list) return;
+  const ids = Object.keys(activeLayers);
+  if(cntEl) cntEl.textContent = ids.length;
+  if(!ids.length){
+    list.innerHTML = '<div class="aop-empty">Sin capas activas</div>';
+    return;
+  }
+  // Preserve existing order, append new
+  const existing = Array.from(list.querySelectorAll('.aop-row')).map(r=>r.dataset.lid);
+  const kept     = existing.filter(id=>ids.includes(id));
+  const added    = ids.filter(id=>!existing.includes(id));
+  const ordered  = [...kept, ...added];
+
+  list.innerHTML = ordered.map(id=>{
+    const c = LAYER_CATALOG[id]; if(!c) return '';
+    const rv = c.role==='victima'  ? '<span class="aop-rv v">♀</span>'
+             : c.role==='atacante' ? '<span class="aop-rv a">⚡</span>' : '';
+    return `<div class="aop-row" data-lid="${id}" draggable="true">
+      <span class="aop-hdl">⠿</span>
+      <div class="aop-dot" style="background:${c.color}"></div>
+      <span class="aop-name" title="${c.label}">${c.label}</span>
+      ${rv}
+      <button class="aop-x" onclick="toggleLayer('${id}')">✕</button>
+    </div>`;
+  }).join('');
+
+  Array.from(list.querySelectorAll('.aop-row')).forEach(row=>{
+    row.addEventListener('dragstart', e=>{
+      _aopDrag=row;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>row.classList.add('aop-drag'),0);
+    });
+    row.addEventListener('dragend', ()=>{
+      row.classList.remove('aop-drag');
+      list.querySelectorAll('.aop-row').forEach(r=>r.classList.remove('aop-over'));
+      aopApplyOrder();
+    });
+    row.addEventListener('dragover', e=>{
+      e.preventDefault();
+      list.querySelectorAll('.aop-row').forEach(r=>r.classList.remove('aop-over'));
+      if(row!==_aopDrag) row.classList.add('aop-over');
+    });
+    row.addEventListener('dragleave', ()=>row.classList.remove('aop-over'));
+    row.addEventListener('drop', e=>{
+      e.preventDefault();
+      if(!_aopDrag||_aopDrag===row) return;
+      row.classList.remove('aop-over');
+      list.insertBefore(_aopDrag, row);
+    });
+  });
+}
+
+function aopApplyOrder(){
+  const ids = Array.from(document.querySelectorAll('#aopList .aop-row'))
+    .map(r=>r.dataset.lid).filter(id=>activeLayers[id]);
+  if(!ids.length) return;
+  ids.forEach(id=>{
+    const st=activeLayers[id];
+    [st.leafletLayer,st.ptLayer].forEach(l=>{ if(l)try{map1.removeLayer(l)}catch(e){} });
+  });
+  [...ids].reverse().forEach(id=>{
+    const st=activeLayers[id];
+    [st.leafletLayer,st.ptLayer].forEach(l=>{ if(l)try{l.addTo(map1)}catch(e){} });
+  });
+}
+
+// ── Splitter resize (#aopSplit between #lb and #aopWrap) ─────────────────────
+document.addEventListener('DOMContentLoaded', ()=>{
+  const split = document.getElementById('aopSplit');
+  const wrap  = document.getElementById('aopWrap');
+  const lb    = document.getElementById('lb');
+  if(!split||!wrap||!lb) return;
+  let sy=0, sh=0, dragging=false;
+  split.addEventListener('mousedown', e=>{
+    if(wrap.classList.contains('aop-closed')) return;
+    dragging=true; sy=e.clientY; sh=wrap.offsetHeight;
+    document.body.style.cursor='ns-resize';
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    const delta = sy - e.clientY;
+    const h = Math.max(60, Math.min(sh+delta, 480));
+    wrap.style.height = h+'px';
+    wrap.style.maxHeight = 'none';
+  });
+  document.addEventListener('mouseup', ()=>{
+    if(!dragging) return;
+    dragging=false;
+    document.body.style.cursor='';
+    document.body.style.userSelect='';
+  });
+});
+
 init();
 </script>
 <script>
