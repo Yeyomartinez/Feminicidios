@@ -18,7 +18,22 @@
 }
 html,body{height:100%;background:var(--bg);font-family:var(--fB);color:var(--tx);overflow:hidden}
 .shell{display:grid;grid-template-rows:52px 1fr;height:100vh}
-.body{display:grid;grid-template-columns:300px 1fr;height:100%;overflow:hidden;transition:grid-template-columns .25s}
+.body{display:grid;grid-template-columns:300px 1fr;height:100%;overflow:hidden;transition:grid-template-columns .3s}
+.body.collapsed{grid-template-columns:0px 1fr}
+.body.rp-open.collapsed{grid-template-columns:0px 1fr 356px}
+.left{transition:transform .3s,opacity .3s}
+.body.collapsed .left{transform:translateX(-100%);opacity:0;pointer-events:none}
+/* Toggle button */
+.panel-toggle{
+  position:absolute;top:50%;left:0;transform:translateY(-50%);
+  z-index:600;width:18px;height:52px;
+  background:var(--s1);border:1px solid var(--ln);border-left:none;
+  border-radius:0 6px 6px 0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--tx3);font-size:11px;transition:all .2s;
+}
+.panel-toggle:hover{background:var(--s2);color:var(--tx);width:22px}
+.body.collapsed .panel-toggle{left:0}
 .body.rp-open{grid-template-columns:300px 1fr 356px}
 
 /* HEADER */
@@ -429,6 +444,7 @@ input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
 
   <!-- MAP -->
   <div class="mapwrap" id="mw">
+    <button class="panel-toggle" id="panelToggle" onclick="togglePanel()" title="Mostrar/ocultar panel">‹</button>
     <div class="maps-grid" id="mapsGrid">
       <div id="map"></div>
       <div id="map2"></div>
@@ -454,7 +470,21 @@ input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+// ── PANEL TOGGLE ──────────────────────────────────────────────────────────────
+function togglePanel(){
+  const body = document.getElementById("body");
+  const btn  = document.getElementById("panelToggle");
+  const collapsed = body.classList.toggle("collapsed");
+  btn.textContent  = collapsed ? "›" : "‹";
+  btn.title        = collapsed ? "Mostrar panel" : "Ocultar panel";
+  // Resize maps after transition
+  setTimeout(()=>{
+    map1.invalidateSize({animate:false,pan:false});
+    if(typeof map2!=="undefined") map2.invalidateSize({animate:false,pan:false});
+  }, 320);
+}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
 // Lee la URL del API desde ?api=https://... en la URL del navegador
