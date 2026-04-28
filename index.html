@@ -457,7 +457,21 @@ input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
-const API = "http://localhost:8000";
+// Lee la URL del API desde ?api=https://... en la URL del navegador
+const _params = new URLSearchParams(window.location.search);
+const API = _params.get("api") || "http://localhost:8000";
+
+// Wrapper fetch que siempre incluye el header para saltar la pantalla de ngrok
+function apiFetch(url, opts={}) {
+  return fetch(url, {
+    ...opts,
+    headers: {
+      ...(opts.headers||{}),
+      "ngrok-skip-browser-warning": "true",
+      "Content-Type": "application/json",
+    }
+  });
+}
 const MAX_LAYERS = 5;
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
@@ -502,12 +516,12 @@ function initMaps(){
 
 async function loadTerr(){
   try{
-    const rb=await fetch(`${API}/territory/geojson`);
+    const rb=await apiFetch(`${API}/territory/geojson`);
     const db=await rb.json();
     const bs={color:"#FF3860",weight:2,opacity:.8,fill:false};
     boundaryLayer=L.geoJSON(db.geojson,{style:bs}).addTo(map1);
     boundaryLayer2=L.geoJSON(db.geojson,{style:bs}).addTo(map2);
-    const rm=await fetch(`${API}/territory/mask`);
+    const rm=await apiFetch(`${API}/territory/mask`);
     const dm=await rm.json();
     const ms={color:"transparent",fillColor:"#06070D",fillOpacity:.72,weight:0};
     maskLayer=L.geoJSON(dm.geojson,{style:ms}).addTo(map1);
@@ -626,13 +640,13 @@ async function toggleLayer(id){
   activeLayers[id]={leafletLayer:null};refreshRow(id);updateCounter();
   try{
     if(cfg.type==="point"){
-      const d=await fetch(`${API}/layer/${id}/points`).then(r=>r.json());
+      const d=await apiFetch(`${API}/layer/${id}/points`).then(r=>r.json());
       const el=document.getElementById(`ct-${id}`);if(el)el.textContent=`${d.count} reg.`;
       activeLayers[id].pointData=d;
       if(showHeat)activeLayers[id].leafletLayer=mkHeat(d,map1);
       if(showPts)activeLayers[id].ptLayer=mkPts(d,map1);
     }else{
-      const d=await fetch(`${API}/layer/${id}/geojson`).then(r=>r.json());
+      const d=await apiFetch(`${API}/layer/${id}/geojson`).then(r=>r.json());
       activeLayers[id].geoData=d;
       activeLayers[id].leafletLayer=mkGeoLayer(d,map1);
     }
@@ -712,12 +726,12 @@ async function toggleCmpLayer(side, id){
 
   try{
     if(cfg.type==="point"){
-      const d = await fetch(`${API}/layer/${id}/points`).then(r=>r.json());
+      const d = await apiFetch(`${API}/layer/${id}/points`).then(r=>r.json());
       dict[id].pointData = d;              // always store for re-render
       dict[id].hl  = showHeat ? mkHeat(d, mp) : null;
       dict[id].ptl = showPts  ? mkPts(d, mp)  : null;
     }else{
-      const d = await fetch(`${API}/layer/${id}/geojson`).then(r=>r.json());
+      const d = await apiFetch(`${API}/layer/${id}/geojson`).then(r=>r.json());
       dict[id].gl = mkGeoLayer(d, mp);
     }
   }catch(e){
@@ -817,7 +831,7 @@ function buildLayerLegendHTML(id,cfg){
 // ── STATS PANEL ────────────────────────────────────────────────────────────────
 async function openStats(id){const cfg=LAYER_CATALOG[id];if(cfg)loadRP(id,cfg.label,cfg.icon,cfg.color)}
 async function loadRP(id,label,icon,color){
-  const r=await fetch(`${API}/layer/${id}/stats`).catch(()=>null);if(!r)return;
+  const r=await apiFetch(`${API}/layer/${id}/stats`).catch(()=>null);if(!r)return;
   const data=await r.json();if(!data.stats){closeRP();return}
   const s=data.stats;
   document.getElementById("body").classList.add("rp-open");document.getElementById("rp").classList.add("show");
@@ -903,14 +917,14 @@ function toggleFolderCmp(mId){
 
 // ── OVERVIEW ──────────────────────────────────────────────────────────────────
 async function loadOverview(){
-  try{const r=await fetch(`${API}/overview`);const d=await r.json();const o=d.overview;
+  try{const r=await apiFetch(`${API}/overview`);const d=await r.json();const o=d.overview;
   document.getElementById("kF").textContent=o.feminicidios||"—";document.getElementById("kC").textContent=o.consumados||"—";
   document.getElementById("kM").textContent=o.microtrafico_activo||"—";document.getElementById("kI").textContent=o.incidentes||"—";
   document.getElementById("kFa").textContent=o.fallas||"—";document.getElementById("kMed").textContent=o.medidas_incumplidas||"—";
   }catch(e){}
 }
 async function preloadCounts(layers){
-  for(const l of layers){if(l.type!=="point")continue;try{const r=await fetch(`${API}/layer/${l.id}/points`);const d=await r.json();const el=document.getElementById(`ct-${l.id}`);if(el)el.textContent=`${d.count} reg.`}catch(e){}}
+  for(const l of layers){if(l.type!=="point")continue;try{const r=await apiFetch(`${API}/layer/${l.id}/points`);const d=await r.json();const el=document.getElementById(`ct-${l.id}`);if(el)el.textContent=`${d.count} reg.`}catch(e){}}
 }
 let toastTimer;
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3000)}
@@ -1021,7 +1035,7 @@ function haversine(la1, lo1, la2, lo2) {
 // ── Poblar selects de análisis ─────────────────────────────────────────────────
 async function loadAnalysisLayers() {
   try {
-    const r = await fetch(`${API}/analysis/layers`);
+    const r = await apiFetch(`${API}/analysis/layers`);
     const d = await r.json();
     anLayers = d.layers;
     ["bufLayer","corrA","corrB"].forEach(sid => {
@@ -1048,7 +1062,7 @@ async function runBuffer() {
 
   try {
     // 1. Descarga puntos de la capa origen
-    const rA = await fetch(`${API}/layer/${layerId}/points`);
+    const rA = await apiFetch(`${API}/layer/${layerId}/points`);
     const dA = await rA.json();
     if (!dA.points || !dA.points.length) {
       showRes("bufRes", '<div class="an-info" style="color:var(--red)">La capa no tiene puntos.</div>');
@@ -1069,7 +1083,7 @@ async function runBuffer() {
     for (const other of anLayers) {
       if (other.id === layerId) continue;
       try {
-        const rB = await fetch(`${API}/layer/${other.id}/points`);
+        const rB = await apiFetch(`${API}/layer/${other.id}/points`);
         const dB = await rB.json();
         let inside = 0;
         for (const [laB, loB] of dB.points) {
@@ -1127,8 +1141,8 @@ async function runCorrelate() {
 
   try {
     const [rA, rB] = await Promise.all([
-      fetch(`${API}/layer/${idA}/points`).then(r => r.json()),
-      fetch(`${API}/layer/${idB}/points`).then(r => r.json()),
+      apiFetch(`${API}/layer/${idA}/points`).then(r => r.json()),
+      apiFetch(`${API}/layer/${idB}/points`).then(r => r.json()),
     ]);
     const ptsA = rA.points, ptsB = rB.points;
     if (!ptsA.length || !ptsB.length) {
@@ -1190,7 +1204,7 @@ async function runCorrelate() {
 async function init(){
   initMaps();
   try{
-    const r=await fetch(`${API}/layers`);
+    const r=await apiFetch(`${API}/layers`);
     const d=await r.json();
     d.layers.forEach(l=>{LAYER_CATALOG[l.id]=l});
     buildPanel(d.modules,d.layers);
