@@ -349,6 +349,29 @@ transition:left .3s,background .15s;user-select:none;}
 .aop-rv.a{background:rgba(220,38,38,.12);color:#FCA5A5;border:1px solid rgba(220,38,38,.2)}
 .aop-x{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px;flex-shrink:0;padding:0;line-height:1}
 .aop-x:hover{color:var(--red)}
+
+/* Position indicator in order panels */
+.aop-pos{font-family:var(--fM);font-size:8px;min-width:14px;text-align:center;flex-shrink:0;color:var(--tx3)}
+.aop-row:first-child .aop-pos{color:var(--red);font-weight:bold}
+.aop-row:first-child{border-top:1px solid rgba(255,56,96,.5)!important}
+/* Compare order panels */
+#cmpSplitA,#cmpSplitB{height:6px;flex-shrink:0;cursor:ns-resize;display:flex;align-items:center;justify-content:center}
+#cmpSplitA{border-top:2px solid var(--red)}
+#cmpSplitB{border-top:2px solid var(--cya)}
+#cmpSplitA::after,#cmpSplitB::after{content:'';width:36px;height:3px;border-radius:2px;background:var(--ln2)}
+#cmpSplitA:hover::after{background:var(--red)}
+#cmpSplitB:hover::after{background:var(--cya)}
+#cmpOrdA,#cmpOrdB{flex-shrink:0;height:130px;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+#cmpOrdA.aop-closed,#cmpOrdB.aop-closed{height:28px}
+#cmpOrdA.aop-closed .cmpOrdBody,#cmpOrdB.aop-closed .cmpOrdBody{display:none}
+.cmpOrdHd{display:flex;align-items:center;gap:6px;padding:5px 12px 4px;flex-shrink:0;cursor:pointer;user-select:none}
+.cmpOrdLbl{font-family:var(--fM);font-size:6.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3);flex:1}
+.cmpOrdCnt{font-family:var(--fD);font-size:11px}
+.cmpOrdArr{font-size:7px;color:var(--tx3);transition:transform .18s}
+.aop-closed .cmpOrdArr{transform:rotate(-90deg)}
+.cmpOrdBody{flex:1;overflow-y:auto;padding:0 8px 6px}
+.cmpOrdBody::-webkit-scrollbar{width:3px}
+.cmpOrdBody::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px}
 </style>
 </head>
 <body>
@@ -459,6 +482,26 @@ transition:left .3s,background .15s;user-select:none;}
       <button class="clear-btn" style="margin-top:7px" onclick="clearCompare()">✕ Limpiar todo — Comparar (A + B)</button>
 
       <div class="lb" id="lb-compare"></div>
+
+      <div id="cmpSplitA"></div>
+      <div id="cmpOrdA">
+        <div class="cmpOrdHd" onclick="document.getElementById('cmpOrdA').classList.toggle('aop-closed')">
+          <span class="cmpOrdLbl">Orden Mapa A</span>
+          <span class="cmpOrdCnt" id="cmpOrdCntA" style="color:var(--red)">0</span>
+          <span class="cmpOrdArr">▶</span>
+        </div>
+        <div class="cmpOrdBody" id="cmpOrdListA"><div class="aop-empty">Sin capas</div></div>
+      </div>
+
+      <div id="cmpSplitB"></div>
+      <div id="cmpOrdB">
+        <div class="cmpOrdHd" onclick="document.getElementById('cmpOrdB').classList.toggle('aop-closed')">
+          <span class="cmpOrdLbl">Orden Mapa B</span>
+          <span class="cmpOrdCnt" id="cmpOrdCntB" style="color:var(--cya)">0</span>
+          <span class="cmpOrdArr">▶</span>
+        </div>
+        <div class="cmpOrdBody" id="cmpOrdListB"><div class="aop-empty">Sin capas</div></div>
+      </div>
     </div>
 
     <!-- ── ANÁLISIS ── -->
@@ -858,6 +901,7 @@ function updateCmpUI(side){
   const strip = document.getElementById(side==="A" ? "legStrip" : "leg2Strip");
   const hEl   = side==="A" ? "legH"  : "leg2H";
   const bEl   = side==="A" ? "legB"  : "leg2B";
+  cmpOrdRender(side);
   if(!n){ strip.style.display="none"; return; }
   strip.style.display="block";
   document.getElementById(hEl).textContent="Mapa "+side+" ("+n+")";
@@ -1364,8 +1408,10 @@ function aopRender(){
     const c = LAYER_CATALOG[id]; if(!c) return '';
     const rv = c.role==='victima'  ? '<span class="aop-rv v">♀</span>'
              : c.role==='atacante' ? '<span class="aop-rv a">⚡</span>' : '';
+    const posN=ordered.indexOf(id)+1, isT=posN===1, isB=posN===ordered.length;
     return `<div class="aop-row" data-lid="${id}" draggable="true">
       <span class="aop-hdl">⠿</span>
+      <span class="aop-pos" title="${isT?'Encima — top':isB?'Abajo — bottom':'Pos '+posN}">${isT?'▲':isB?'▼':posN}</span>
       <div class="aop-dot" style="background:${c.color}"></div>
       <span class="aop-name" title="${c.label}">${c.label}</span>
       ${rv}
@@ -1382,7 +1428,7 @@ function aopRender(){
     row.addEventListener('dragend', ()=>{
       row.classList.remove('aop-drag');
       list.querySelectorAll('.aop-row').forEach(r=>r.classList.remove('aop-over'));
-      aopApplyOrder();
+      aopApplyOrder(); aopRender();
     });
     row.addEventListener('dragover', e=>{
       e.preventDefault();
@@ -1439,6 +1485,64 @@ document.addEventListener('DOMContentLoaded', ()=>{
     dragging=false;
     document.body.style.cursor='';
     document.body.style.userSelect='';
+  });
+});
+
+
+// ══════════════════════════════════════════════════════
+// COMPARE ORDER PANELS
+// ══════════════════════════════════════════════════════
+function cmpOrdRender(side){
+  const dict   = side==="A" ? cmpLayersA : cmpLayersB;
+  const listEl = document.getElementById("cmpOrdList"+side);
+  const cntEl  = document.getElementById("cmpOrdCnt"+side);
+  const mp     = side==="A" ? map1 : map2;
+  const accent = side==="A" ? "#FF3860" : "#00C9D4";
+  if(!listEl) return;
+  const ids = Object.keys(dict);
+  if(cntEl) cntEl.textContent = ids.length;
+  if(!ids.length){ listEl.innerHTML='<div class="aop-empty">Sin capas</div>'; return; }
+  const existing = Array.from(listEl.querySelectorAll('.aop-row')).map(r=>r.dataset.lid);
+  const kept   = existing.filter(id=>ids.includes(id));
+  const added  = ids.filter(id=>!existing.includes(id));
+  const ordered= [...kept,...added];
+  listEl.innerHTML = ordered.map(id=>{
+    const c=LAYER_CATALOG[id]; if(!c) return '';
+    const rv=c.role==='victima'?'<span class="aop-rv v">♀</span>':c.role==='atacante'?'<span class="aop-rv a">⚡</span>':'';
+    const posN=ordered.indexOf(id)+1, isT=posN===1, isB=posN===ordered.length;
+    return `<div class="aop-row" data-lid="${id}" draggable="true" style="border-left:2px solid ${accent}40">
+      <span class="aop-hdl">⠿</span>
+      <span class="aop-pos" title="${isT?'Encima — top':isB?'Abajo — bottom':'Pos '+posN}">${isT?'▲':isB?'▼':posN}</span>
+      <div class="aop-dot" style="background:${c.color}"></div>
+      <span class="aop-name" title="${c.label}">${c.label}</span>
+      ${rv}
+      <button class="aop-x" onclick="toggleCmpLayer('${side}','${id}')">✕</button>
+    </div>`;
+  }).join('');
+  let _drag=null;
+  Array.from(listEl.querySelectorAll('.aop-row')).forEach(row=>{
+    row.addEventListener('dragstart',e=>{ _drag=row; e.dataTransfer.effectAllowed='move'; setTimeout(()=>row.classList.add('aop-drag'),0); });
+    row.addEventListener('dragend',()=>{ row.classList.remove('aop-drag'); listEl.querySelectorAll('.aop-row').forEach(r=>r.classList.remove('aop-over')); cmpOrdApply(side,mp,dict); cmpOrdRender(side); });
+    row.addEventListener('dragover',e=>{ e.preventDefault(); listEl.querySelectorAll('.aop-row').forEach(r=>r.classList.remove('aop-over')); if(row!==_drag) row.classList.add('aop-over'); });
+    row.addEventListener('dragleave',()=>row.classList.remove('aop-over'));
+    row.addEventListener('drop',e=>{ e.preventDefault(); if(!_drag||_drag===row) return; row.classList.remove('aop-over'); listEl.insertBefore(_drag,row); });
+  });
+}
+
+function cmpOrdApply(side,mp,dict){
+  const ids=Array.from(document.querySelectorAll('#cmpOrdList'+side+' .aop-row')).map(r=>r.dataset.lid);
+  ids.forEach(id=>{ const st=dict[id]; if(!st) return; [st.hl,st.ptl,st.gl].forEach(l=>{if(l)try{mp.removeLayer(l)}catch(e){}}); });
+  [...ids].reverse().forEach(id=>{ const st=dict[id]; if(!st) return; [st.hl,st.ptl,st.gl].forEach(l=>{if(l)try{l.addTo(mp)}catch(e){}}); });
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  [['cmpSplitA','cmpOrdA'],['cmpSplitB','cmpOrdB']].forEach(([sId,wId])=>{
+    const sp=document.getElementById(sId), wr=document.getElementById(wId);
+    if(!sp||!wr) return;
+    let sy=0,sh=0,on=false;
+    sp.addEventListener('mousedown',e=>{ if(wr.classList.contains('aop-closed')) return; on=true; sy=e.clientY; sh=wr.offsetHeight; document.body.style.cursor='ns-resize'; document.body.style.userSelect='none'; e.preventDefault(); });
+    document.addEventListener('mousemove',e=>{ if(!on) return; const h=Math.max(60,Math.min(sh+(sy-e.clientY),320)); wr.style.height=h+'px'; wr.style.maxHeight='none'; });
+    document.addEventListener('mouseup',()=>{ if(!on) return; on=false; document.body.style.cursor=''; document.body.style.userSelect=''; });
   });
 });
 
