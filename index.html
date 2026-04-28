@@ -459,7 +459,7 @@ input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
 <script>
 // Lee la URL del API desde ?api=https://... en la URL del navegador
 const _params = new URLSearchParams(window.location.search);
-const API = _params.get("api") || "http://localhost:8000";
+const API = _params.get("api") || "https://unextraneous-unfugitively-yahir.ngrok-free.dev";
 
 // Wrapper fetch que siempre incluye el header para saltar la pantalla de ngrok
 function apiFetch(url, opts={}) {
