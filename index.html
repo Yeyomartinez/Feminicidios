@@ -18,22 +18,7 @@
 }
 html,body{height:100%;background:var(--bg);font-family:var(--fB);color:var(--tx);overflow:hidden}
 .shell{display:grid;grid-template-rows:52px 1fr;height:100vh}
-.body{display:grid;grid-template-columns:300px 1fr;height:100%;overflow:hidden;transition:grid-template-columns .3s}
-.body.collapsed{grid-template-columns:0px 1fr}
-.body.rp-open.collapsed{grid-template-columns:0px 1fr 356px}
-.left{transition:transform .3s,opacity .3s}
-.body.collapsed .left{transform:translateX(-100%);opacity:0;pointer-events:none}
-/* Toggle button */
-.panel-toggle{
-  position:absolute;top:50%;left:0;transform:translateY(-50%);
-  z-index:600;width:18px;height:52px;
-  background:var(--s1);border:1px solid var(--ln);border-left:none;
-  border-radius:0 6px 6px 0;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--tx3);font-size:11px;transition:all .2s;
-}
-.panel-toggle:hover{background:var(--s2);color:var(--tx);width:22px}
-.body.collapsed .panel-toggle{left:0}
+.body{display:grid;grid-template-columns:300px 1fr;height:100%;overflow:hidden;transition:grid-template-columns .25s}
 .body.rp-open{grid-template-columns:300px 1fr 356px}
 
 /* HEADER */
@@ -295,15 +280,24 @@ input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
 .leaflet-popup-tip{background:var(--s1)!important}
 .leaflet-popup-content{margin:0!important}
 .leaflet-popup-close-button{color:var(--tx3)!important;top:7px!important;right:9px!important}
+
+#pt{position:fixed;top:calc(52px + 50vh);left:300px;transform:translateY(-50%);
+z-index:99999;width:20px;height:48px;background:#0C0E1A;border:1px solid #1E2440;
+border-left:none;border-radius:0 7px 7px 0;cursor:pointer;color:#8B96BA;
+font-size:14px;font-weight:bold;display:flex;align-items:center;
+justify-content:center;box-shadow:3px 0 10px rgba(0,0,0,.6);
+transition:left .3s,background .15s;user-select:none;}
+#pt:hover{background:#111426;color:#E4E9F7}
 </style>
 </head>
 <body>
+<button id="pt" onclick="togglePanel()" title="Ocultar panel">‹</button>
 <div class="shell">
 
 <header>
   <div class="h-brand">
     <div class="h-logo">BDE <em>·</em> Feminicidios</div>
-    <div class="h-sub">El Playon · Rafael Uribe Uribe · Bogota D.C. · 2024</div>
+    <div class="h-sub">El Playon · Rafael Uribe Uribe · Bogota D.C. · 2026</div>
   </div>
   <div class="h-kpis">
     <div class="kpi"><span class="kpi-n" id="kF" style="color:var(--red)">—</span><span class="kpi-l">Casos total</span></div>
@@ -444,7 +438,6 @@ input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
 
   <!-- MAP -->
   <div class="mapwrap" id="mw">
-    <button class="panel-toggle" id="panelToggle" onclick="togglePanel()" title="Mostrar/ocultar panel">‹</button>
     <div class="maps-grid" id="mapsGrid">
       <div id="map"></div>
       <div id="map2"></div>
@@ -470,21 +463,7 @@ input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-// ── PANEL TOGGLE ──────────────────────────────────────────────────────────────
-function togglePanel(){
-  const body = document.getElementById("body");
-  const btn  = document.getElementById("panelToggle");
-  const collapsed = body.classList.toggle("collapsed");
-  btn.textContent  = collapsed ? "›" : "‹";
-  btn.title        = collapsed ? "Mostrar panel" : "Ocultar panel";
-  // Resize maps after transition
-  setTimeout(()=>{
-    map1.invalidateSize({animate:false,pan:false});
-    if(typeof map2!=="undefined") map2.invalidateSize({animate:false,pan:false});
-  }, 320);
-}
-</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
 // Lee la URL del API desde ?api=https://... en la URL del navegador
@@ -1257,6 +1236,31 @@ async function init(){
   }
 }
 init();
+</script>
+<script>
+var _pOpen=true;
+function togglePanel(){
+  var body=document.getElementById('body');
+  var btn=document.getElementById('pt');
+  _pOpen=!_pOpen;
+  body.style.transition='grid-template-columns .3s';
+  var hasRp=body.classList.contains('rp-open');
+  if(_pOpen){
+    body.style.gridTemplateColumns=hasRp?'300px 1fr 356px':'300px 1fr';
+    btn.style.left='300px';
+    btn.innerHTML='‹';
+    btn.title='Ocultar panel';
+  }else{
+    body.style.gridTemplateColumns=hasRp?'0px 1fr 356px':'0px 1fr';
+    btn.style.left='0px';
+    btn.innerHTML='›';
+    btn.title='Mostrar panel';
+  }
+  setTimeout(function(){
+    try{map1.invalidateSize({animate:false,pan:false})}catch(e){}
+    try{map2.invalidateSize({animate:false,pan:false})}catch(e){}
+  },340);
+}
 </script>
 </body>
 </html>
