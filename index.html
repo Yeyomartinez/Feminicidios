@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Feminicidios · BDE · El Playon · Bogota</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06070D;--s1:#0C0E1A;--s2:#111426;--s3:#181D35;
+  --ln:#1E2440;--ln2:#2C344F;
+  --tx:#E4E9F7;--tx2:#8B96BA;--tx3:#4A5278;
+  --red:#FF3860;--ora:#FF6A3D;--yel:#FFCA3A;--cya:#00C9D4;
+  --vio:#8B5CF6;--grn:#10B981;
+  --fD:'Archivo Black',sans-serif;--fM:'Space Mono',monospace;--fB:'Barlow',sans-serif;
+}
+html,body{height:100%;background:var(--bg);font-family:var(--fB);color:var(--tx);overflow:hidden}
+.shell{display:grid;grid-template-rows:52px 1fr;height:100vh}
+.body{display:grid;grid-template-columns:300px 1fr;height:100%;overflow:hidden;transition:grid-template-columns .25s}
+.body.rp-open{grid-template-columns:300px 1fr 356px}
+
+/* HEADER */
+header{display:flex;align-items:center;padding:0 0 0 18px;background:var(--s1);border-bottom:1px solid var(--ln);z-index:999;position:relative}
+header::after{content:'';position:absolute;bottom:-1px;left:0;width:110px;height:2px;background:var(--red)}
+.h-brand{padding-right:20px;border-right:1px solid var(--ln)}
+.h-logo{font-family:var(--fD);font-size:14px;color:var(--tx);letter-spacing:.04em}
+.h-logo em{color:var(--red);font-style:normal}
+.h-sub{font-family:var(--fM);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-top:3px}
+.h-kpis{display:flex}
+.kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 13px;border-right:1px solid var(--ln);height:52px;cursor:default;transition:background .15s}
+.kpi:hover{background:var(--s2)}
+.kpi-n{font-family:var(--fD);font-size:15px;line-height:1}
+.kpi-l{font-family:var(--fM);font-size:6px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-top:3px}
+.h-right{margin-left:auto;padding:0 14px;display:flex;align-items:center;gap:8px}
+.api-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--ln);border-radius:20px;font-family:var(--fM);font-size:7.5px;color:var(--tx3)}
+.api-d{width:6px;height:6px;border-radius:50%;background:var(--tx3);flex-shrink:0}
+.api-d.ok{background:var(--grn);box-shadow:0 0 7px var(--grn);animation:bl 2s infinite}
+.api-d.err{background:var(--red);box-shadow:0 0 7px var(--red)}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* LEFT PANEL */
+.left{background:var(--s1);border-right:1px solid var(--ln);display:flex;flex-direction:column;overflow:hidden}
+.mode-tabs{display:flex;border-bottom:1px solid var(--ln);flex-shrink:0}
+.mode-tab{flex:1;padding:9px 0;font-family:var(--fM);font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;text-align:center;color:var(--tx3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .18s}
+.mode-tab:hover{color:var(--tx2);background:rgba(255,255,255,.02)}
+.mode-tab.on{color:var(--tx);border-bottom-color:var(--red);background:rgba(255,56,96,.04)}
+
+/* Sub-panels controlled by JS */
+.sub-panel{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0}
+.sub-panel.show{display:flex}
+
+/* Compare slots */
+.cmp-slots{flex-shrink:0;padding:8px 12px;border-bottom:1px solid var(--ln);background:var(--bg)}
+.cmp-slot{padding:7px 10px;border:1px dashed var(--ln);border-radius:7px;margin-bottom:5px;display:flex;align-items:center;gap:7px;font-family:var(--fM);font-size:8.5px;color:var(--tx3);min-height:38px}
+.cmp-slot.filled{border-style:solid;border-color:var(--ln2);background:var(--s2)}
+.cslot-ltr{font-family:var(--fD);font-size:13px}
+.cslot-x{margin-left:auto;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:1px}
+.cslot-x:hover{color:var(--red)}
+
+/* Heat controls */
+.heat-bar{flex-shrink:0;padding:7px 12px;border-bottom:1px solid var(--ln);background:var(--bg);display:flex;flex-direction:column;gap:4px}
+.heat-bar-title{font-family:var(--fM);font-size:6.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:2px}
+.heat-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.hbtn{padding:5px 0;border:1px solid var(--ln);border-radius:5px;background:var(--bg);font-family:var(--fM);font-size:7.5px;color:var(--tx3);cursor:pointer;text-align:center;transition:all .14s}
+.hbtn:hover{border-color:var(--ln2);color:var(--tx2)}
+.hbtn.on{background:rgba(255,56,96,.08);border-color:rgba(255,56,96,.28);color:var(--red)}
+.srow{display:flex;align-items:center;gap:7px}
+.srow label{font-family:var(--fM);font-size:7px;color:var(--tx3);width:52px}
+input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
+.sv{font-family:var(--fM);font-size:8px;color:var(--tx);min-width:24px;text-align:right}
+
+/* Active counter */
+.act-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--ln);flex-shrink:0;background:var(--s2)}
+.act-bar-l{font-family:var(--fM);font-size:6.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--tx3)}
+.act-bar-r{display:flex;align-items:center;gap:5px}
+.act-count{font-family:var(--fD);font-size:12px;color:var(--tx)}
+.act-slash,.act-max{font-family:var(--fM);font-size:8.5px;color:var(--tx3)}
+.act-dots{display:flex;gap:3px;margin-left:4px}
+.act-dot{width:6px;height:6px;border-radius:50%;border:1px solid var(--ln2);background:var(--bg);transition:all .2s}
+.act-dot.on{border-color:transparent;background:var(--red);box-shadow:0 0 5px var(--red)}
+
+/* Layer tree */
+.lb{flex:1;overflow-y:auto;overflow-x:hidden}
+.lb::-webkit-scrollbar{width:3px}
+.lb::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px}
+.mod-folder{border-bottom:1px solid var(--ln)}
+.mod-hd{display:flex;align-items:center;gap:7px;padding:9px 12px;cursor:pointer;background:var(--s2);transition:background .14s;position:sticky;top:0;z-index:2;user-select:none}
+.mod-hd:hover{background:var(--s3)}
+.mod-arrow{font-size:7px;color:var(--tx3);transition:transform .2s;flex-shrink:0;width:10px;text-align:center}
+.mod-folder.open .mod-arrow{transform:rotate(90deg)}
+.mod-ico{font-size:12px;flex-shrink:0}
+.mod-name{font-family:var(--fM);font-size:8px;letter-spacing:.08em;text-transform:uppercase;flex:1;line-height:1.2}
+.mod-meta{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.mod-act-n{font-family:var(--fD);font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(255,56,96,.12);color:var(--red);border:1px solid rgba(255,56,96,.2);display:none}
+.mod-act-n.show{display:block}
+.mod-total{font-family:var(--fM);font-size:7.5px;color:var(--tx3)}
+.mod-body{display:none}
+.mod-folder.open .mod-body{display:block}
+.lrow2{display:flex;align-items:center;gap:7px;padding:6px 10px 6px 14px;border-bottom:1px solid rgba(30,36,64,.5);transition:background .12s;border-left:2px solid transparent}
+.lrow2:hover{background:rgba(255,255,255,.02)}
+.lrow2.active{background:rgba(255,255,255,.03);border-left-color:var(--lc)}
+.eye-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--ln);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx3);flex-shrink:0;transition:all .14s;padding:0}
+.eye-btn:hover{border-color:var(--ln2);color:var(--tx2)}
+.eye-btn.on{border-color:var(--lc,var(--red));color:var(--lc,var(--red));background:color-mix(in srgb,var(--lc,var(--red)) 12%,transparent);box-shadow:0 0 6px color-mix(in srgb,var(--lc,var(--red)) 30%,transparent)}
+.lico2{width:20px;height:20px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
+.tbadge{font-family:var(--fM);font-size:6px;letter-spacing:.06em;padding:2px 5px;border-radius:3px;flex-shrink:0;text-transform:uppercase}
+.tbadge.point{background:rgba(255,56,96,.08);color:#ff8099;border:1px solid rgba(255,56,96,.18)}
+.tbadge.polygon{background:rgba(99,102,241,.08);color:#a5b4fc;border:1px solid rgba(99,102,241,.2)}
+.tbadge.line{background:rgba(252,211,77,.08);color:#fcd34d;border:1px solid rgba(252,211,77,.2)}
+.stat-btn{width:20px;height:20px;border-radius:4px;border:1px solid var(--ln);background:none;cursor:pointer;font-size:10px;color:var(--tx3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .14s;padding:0}
+.stat-btn:hover{border-color:var(--ln2);color:var(--yel)}
+.cmp-add-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--ln);background:none;cursor:pointer;font-size:11px;color:var(--tx3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .14s;padding:0;font-family:var(--fM)}
+.cmp-add-btn.A{border-color:rgba(255,56,96,.35);color:var(--red);background:rgba(255,56,96,.07)}
+.cmp-add-btn.B{border-color:rgba(0,201,212,.35);color:var(--cya);background:rgba(0,201,212,.07)}
+.cmp-add-btn.active-A{border-color:var(--red);color:#fff;background:var(--red);box-shadow:0 0 6px rgba(255,56,96,.5)}
+.cmp-add-btn.active-B{border-color:var(--cya);color:#000;background:var(--cya);box-shadow:0 0 6px rgba(0,201,212,.5)}
+.lnm2{font-size:10.5px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lct2{font-family:var(--fM);font-size:7px;color:var(--tx3);margin-top:1px}
+
+/* ANALYSIS PANEL */
+.an-body{flex:1;overflow-y:auto;overflow-x:hidden}
+.an-body::-webkit-scrollbar{width:3px}
+.an-body::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px}
+.an-tool{border-bottom:1px solid var(--ln)}
+.an-hd{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:var(--s2);transition:background .14s;user-select:none}
+.an-hd:hover{background:var(--s3)}
+.an-hd-ico{font-size:14px;flex-shrink:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.an-hd-name{font-family:var(--fM);font-size:8px;letter-spacing:.07em;text-transform:uppercase;flex:1;color:var(--tx2)}
+.an-hd-desc{font-size:8px;color:var(--tx3);font-family:var(--fB)}
+.an-arr{font-size:7px;color:var(--tx3);transition:transform .18s}
+.an-tool.open .an-arr{transform:rotate(90deg)}
+.an-content{display:none;padding:10px 12px;background:var(--bg)}
+.an-tool.open .an-content{display:block}
+.an-lbl{font-family:var(--fM);font-size:6.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin:8px 0 4px}
+.an-lbl:first-child{margin-top:0}
+.an-sel{width:100%;padding:6px 8px;background:var(--s2);border:1px solid var(--ln);border-radius:6px;color:var(--tx2);font-family:var(--fM);font-size:8.5px;outline:none;cursor:pointer}
+.an-sel:focus{border-color:var(--ln2)}
+.an-rrow{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.an-rrow label{font-family:var(--fM);font-size:7.5px;color:var(--tx3);white-space:nowrap}
+.an-rrow input[type=range]{flex:1;accent-color:var(--red)}
+.an-rv{font-family:var(--fM);font-size:8.5px;color:var(--tx);min-width:38px;text-align:right}
+.an-run{width:100%;padding:7px;border-radius:6px;font-family:var(--fM);font-size:8.5px;cursor:pointer;transition:all .14s;letter-spacing:.06em;margin-top:10px}
+.an-run.red{border:1px solid rgba(255,56,96,.35);background:rgba(255,56,96,.1);color:var(--red)}
+.an-run.cya{border:1px solid rgba(0,201,212,.35);background:rgba(0,201,212,.1);color:var(--cya)}
+.an-run.yel{border:1px solid rgba(255,202,58,.35);background:rgba(255,202,58,.1);color:var(--yel)}
+.an-run.vio{border:1px solid rgba(139,92,246,.35);background:rgba(139,92,246,.1);color:var(--vio)}
+.an-run.muted{border:1px solid var(--ln);background:none;color:var(--tx3);margin-top:4px}
+.an-run:hover{filter:brightness(1.15)}
+.an-run:disabled{opacity:.4;cursor:not-allowed}
+.an-info{font-family:var(--fM);font-size:8px;color:var(--tx3);line-height:1.65;padding:4px 0 6px}
+.an-res{margin-top:10px}
+.an-cards{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.an-card{background:var(--s1);border:1px solid var(--ln);border-radius:7px;padding:9px;border-top:3px solid var(--cc,var(--red))}
+.an-card-n{font-family:var(--fD);font-size:22px;line-height:1;color:var(--cc,var(--tx))}
+.an-card-l{font-family:var(--fM);font-size:6.5px;color:var(--tx3);margin-top:3px;line-height:1.5}
+.an-chart-lbl{font-family:var(--fM);font-size:6.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin:8px 0 5px}
+.an-brow{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.an-blbl{font-family:var(--fM);font-size:7px;color:var(--tx3);width:75px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.an-btrk{flex:1;height:10px;background:var(--s1);border-radius:2px;overflow:hidden}
+.an-bfil{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.an-bval{font-family:var(--fM);font-size:7px;color:var(--tx2);min-width:24px;text-align:right;flex-shrink:0}
+.an-chips{display:flex;flex-wrap:wrap;gap:4px;padding:4px 0}
+.an-chip{padding:3px 8px;border:1px solid var(--ln);border-radius:20px;font-family:var(--fM);font-size:8px;color:var(--tx3);cursor:pointer;background:var(--bg);transition:all .12s}
+.an-chip:hover{border-color:var(--ln2);color:var(--tx2)}
+.an-chip.on{background:rgba(255,202,58,.1);border-color:rgba(255,202,58,.35);color:var(--yel)}
+.an-pill-row{font-family:var(--fM);font-size:8px;color:var(--tx3);line-height:1.7;margin-top:4px}
+.an-pill-row b{color:var(--tx)}
+.an-spin{display:inline-block;width:11px;height:11px;border:2px solid var(--ln2);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MAP */
+.mapwrap{position:relative;overflow:hidden;background:var(--bg)}
+/* Flex — map2 always in DOM, width:0 when hidden so Leaflet keeps its ref */
+.maps-grid{width:100%;height:100%;display:flex;position:relative}
+#map {flex:1;min-width:0;height:100%;z-index:1;transition:flex .25s}
+#map2{flex:0;width:0;min-width:0;height:100%;overflow:hidden;z-index:1;transition:flex .25s}
+.maps-grid.split #map {flex:1}
+.maps-grid.split #map2{flex:1;width:auto}
+/* Divider */
+.split-line{
+  display:none;position:absolute;top:0;bottom:0;
+  left:calc(50% - 1px);width:2px;z-index:800;pointer-events:none;
+  background:linear-gradient(180deg,transparent 4%,var(--red) 25%,var(--red) 75%,transparent 96%);
+}
+.maps-grid.split~.split-line{display:block}
+/* Map labels */
+.map-badge{
+  position:absolute;top:10px;z-index:700;pointer-events:none;display:none;
+  background:rgba(12,14,26,.92);backdrop-filter:blur(6px);
+  border:1px solid var(--ln);border-radius:5px;
+  padding:3px 11px;font-family:var(--fM);font-size:8.5px;color:var(--tx2);
+}
+.map-badge.a{left:14px}
+.map-badge.b{right:14px}
+.maps-grid.split~.map-badge{display:block}
+#ldr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.ldr-t{font-family:var(--fD);font-size:13px;letter-spacing:.08em;color:var(--tx2)}
+.ldr-bar{width:160px;height:2px;background:var(--ln);border-radius:1px;overflow:hidden}
+.ldr-f{height:100%;background:var(--red);border-radius:1px;animation:ldf 1.4s ease-in-out infinite}
+@keyframes ldf{0%{width:0}65%{width:80%}100%{width:100%}}
+
+/* LEGEND */
+.leg-strip{position:absolute;bottom:14px;left:14px;z-index:700;background:rgba(12,14,26,.93);backdrop-filter:blur(10px);border:1px solid var(--ln);border-radius:10px;padding:10px 12px;min-width:164px;max-width:230px;pointer-events:none;display:none}
+.leg2-strip{position:absolute;bottom:14px;right:14px;z-index:700;background:rgba(12,14,26,.93);backdrop-filter:blur(10px);border:1px solid var(--ln);border-radius:10px;padding:10px 12px;min-width:164px;pointer-events:none;display:none}
+.leg-h{font-family:var(--fD);font-size:9.5px;letter-spacing:.03em;color:var(--tx);margin-bottom:8px}
+.leg-sec{font-family:var(--fM);font-size:6px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin:6px 0 4px}
+.leg-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-family:var(--fM);font-size:7.5px;color:var(--tx2)}
+.sym-circle{border-radius:50%;flex-shrink:0}
+.sym-sq{border-radius:2px;flex-shrink:0;opacity:.7}
+.sym-line{height:2px;border-radius:1px;flex-shrink:0}
+.sym-grad{height:7px;border-radius:2px;flex-shrink:0}
+.leg-catbox{margin-top:2px;padding:6px 8px;background:var(--bg);border:1px solid var(--ln);border-radius:5px;max-height:80px;overflow-y:auto}
+.leg-catbox::-webkit-scrollbar{width:2px}
+.leg-catbox::-webkit-scrollbar-thumb{background:var(--ln2)}
+.leg-div{height:1px;background:var(--ln);margin:6px 0}
+
+/* RIGHT STATS PANEL */
+.rp{background:var(--s1);border-left:1px solid var(--ln);display:none;flex-direction:column;overflow:hidden}
+.rp.show{display:flex}
+.rp-hd{padding:10px 12px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--s2)}
+.rp-ico{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.rp-ttl{font-family:var(--fD);font-size:11px;flex:1;line-height:1.25}
+.rp-src{font-family:var(--fM);font-size:6.5px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.rp-x{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;padding:2px;line-height:1}
+.rp-x:hover{color:var(--tx)}
+.rp-bd{flex:1;overflow-y:auto}
+.rp-bd::-webkit-scrollbar{width:3px}
+.rp-bd::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px}
+.ss{padding:10px 12px;border-bottom:1px solid var(--ln)}
+.ss-lbl{font-family:var(--fM);font-size:6px;letter-spacing:.18em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
+.big-cards{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.bc{background:var(--bg);border:1px solid var(--ln);border-radius:7px;padding:10px 9px;position:relative;overflow:hidden;border-top:3px solid var(--cc,#FF3860)}
+.bc::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,color-mix(in srgb,var(--cc,#FF3860) 6%,transparent),transparent);pointer-events:none}
+.bc-n{font-family:var(--fD);font-size:24px;line-height:1;color:var(--cc,var(--tx));position:relative}
+.bc-l{font-family:var(--fM);font-size:7px;color:var(--tx3);margin-top:4px;line-height:1.5;position:relative}
+.chart-tabs{display:flex;border-bottom:1px solid var(--ln)}
+.chart-tab{flex:1;padding:6px 0;font-family:var(--fM);font-size:7px;letter-spacing:.06em;text-align:center;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;transition:all .15s}
+.chart-tab.on{color:var(--tx);border-bottom-color:var(--cc,var(--red))}
+.chart-tab:hover:not(.on){color:var(--tx2)}
+.chart-panel{display:none;padding:10px 12px}
+.chart-panel.on{display:block}
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.blbl{font-family:var(--fM);font-size:7px;color:var(--tx3);width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.btrk{flex:1;height:11px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bfil{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.bval{font-family:var(--fM);font-size:7px;color:var(--tx2);min-width:20px;text-align:right;flex-shrink:0}
+.pills{display:flex;flex-wrap:wrap;gap:4px}
+.pill{padding:3px 9px;border:1px solid var(--ln);border-radius:20px;font-family:var(--fM);font-size:8px;color:var(--tx2);background:var(--bg)}
+.pill b{color:var(--tx);font-weight:400}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--s3);border:1px solid var(--ln2);border-radius:8px;padding:7px 16px;font-family:var(--fM);font-size:9px;color:var(--tx2);z-index:9999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* GEO HOVER TOOLTIP */
+.geo-tt{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+.geo-tt::before{display:none!important}
+.leaflet-tooltip.geo-tt{background:transparent!important;border:none!important;padding:0!important}
+
+/* Clear button per tab */
+.clear-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 12px;margin:7px 12px 0;
+  border:1px solid rgba(255,56,96,.3);border-radius:6px;
+  background:rgba(255,56,96,.07);color:var(--red);
+  font-family:var(--fM);font-size:7.5px;letter-spacing:.08em;
+  cursor:pointer;width:calc(100% - 24px);justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.clear-btn:hover{background:rgba(255,56,96,.16);border-color:rgba(255,56,96,.5)}
+.clear-btn:active{transform:scale(.97)}
+
+/* LEAFLET */
+.leaflet-control-zoom{border:1px solid var(--ln)!important;box-shadow:none!important}
+.leaflet-control-zoom a{background:var(--s1)!important;color:var(--tx2)!important;border-color:var(--ln)!important}
+.leaflet-control-zoom a:hover{color:var(--tx)!important;background:var(--s2)!important}
+.leaflet-popup-content-wrapper{background:var(--s1)!important;border:1px solid var(--ln)!important;border-radius:8px!important;box-shadow:0 8px 32px #0006!important;color:var(--tx)!important;padding:0!important}
+.leaflet-popup-tip{background:var(--s1)!important}
+.leaflet-popup-content{margin:0!important}
+.leaflet-popup-close-button{color:var(--tx3)!important;top:7px!important;right:9px!important}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<header>
+  <div class="h-brand">
+    <div class="h-logo">BDE <em>·</em> Feminicidios</div>
+    <div class="h-sub">El Playon · Rafael Uribe Uribe · Bogota D.C. · 2024</div>
+  </div>
+  <div class="h-kpis">
+    <div class="kpi"><span class="kpi-n" id="kF" style="color:var(--red)">—</span><span class="kpi-l">Casos total</span></div>
+    <div class="kpi"><span class="kpi-n" id="kC" style="color:var(--ora)">—</span><span class="kpi-l">Consumados</span></div>
+    <div class="kpi"><span class="kpi-n" id="kM" style="color:var(--yel)">—</span><span class="kpi-l">Microtrafico</span></div>
+    <div class="kpi"><span class="kpi-n" id="kI" style="color:var(--cya)">—</span><span class="kpi-l">Incidentes</span></div>
+    <div class="kpi"><span class="kpi-n" id="kFa" style="color:var(--vio)">—</span><span class="kpi-l">Fallas inst.</span></div>
+    <div class="kpi"><span class="kpi-n" id="kMed" style="color:var(--tx2)">—</span><span class="kpi-l">Med. incumpl.</span></div>
+  </div>
+  <div class="h-right">
+    <div class="api-pill"><div class="api-d" id="apiD"></div><span id="apiL">conectando...</span></div>
+  </div>
+</header>
+
+<div class="body" id="body">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="mode-tabs">
+      <button class="mode-tab on" id="tab-explore"  onclick="setMode('explore')">Explorar</button>
+      <button class="mode-tab"    id="tab-compare"  onclick="setMode('compare')">Comparar</button>
+      <button class="mode-tab"    id="tab-analysis" onclick="setMode('analysis')">Análisis</button>
+    </div>
+
+    <!-- ── CONTROLES CALOR — siempre visibles (aplican en Explorar y Comparar) ── -->
+    <div class="heat-bar" id="heat-controls">
+      <div class="heat-bar-title">Visualizacion del mapa de calor</div>
+      <div class="heat-btns">
+        <button class="hbtn on" id="hHeat" onclick="togHeat()">🌡 Calor</button>
+        <button class="hbtn"    id="hPts"  onclick="togPts()">📍 Puntos</button>
+        <button class="hbtn on" id="hMask" onclick="togMask()">🗺 Mascara</button>
+      </div>
+      <div class="srow"><label>Radio</label><input type="range" id="sR" min="8" max="80" step="4" value="30" oninput="onSR(this.value)"><span class="sv" id="vR">30</span></div>
+      <div class="srow"><label>Intensidad</label><input type="range" id="sI" min="0.1" max="1" step="0.05" value="0.8" oninput="onSI(this.value)"><span class="sv" id="vI">0.80</span></div>
+      <div class="srow"><label>Difusion</label><input type="range" id="sB" min="5" max="40" step="2" value="18" oninput="onSB(this.value)"><span class="sv" id="vB">18</span></div>
+    </div>
+
+    <!-- ── EXPLORAR ── -->
+    <div class="sub-panel show" id="panel-explore">
+      <div class="act-bar">
+        <span class="act-bar-l">Capas activas</span>
+        <div class="act-bar-r">
+          <span class="act-count" id="actN">0</span><span class="act-slash">/</span><span class="act-max">5</span>
+          <div class="act-dots"><div class="act-dot" id="d0"></div><div class="act-dot" id="d1"></div><div class="act-dot" id="d2"></div><div class="act-dot" id="d3"></div><div class="act-dot" id="d4"></div></div>
+        </div>
+      </div>
+      <button class="clear-btn" onclick="clearExplore()">✕ Limpiar todo — Explorar</button>
+      <div class="lb" id="lb"></div>
+    </div>
+
+    <!-- ── COMPARAR ── -->
+    <div class="sub-panel" id="panel-compare">
+
+      <!-- Status bar: layer count per map -->
+      <div style="display:flex;border-bottom:1px solid var(--ln);flex-shrink:0">
+        <div style="flex:1;padding:8px 12px;border-right:1px solid var(--ln)">
+          <div style="font-family:var(--fM);font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px">Mapa A</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>
+            <span id="cntA" style="font-family:var(--fD);font-size:16px;color:var(--tx);line-height:1">0</span>
+            <span style="font-family:var(--fM);font-size:7.5px;color:var(--tx3)">capas</span>
+            <button onclick="clearAllCmp('A')" style="margin-left:auto;padding:2px 7px;border:1px solid var(--ln);border-radius:4px;background:none;color:var(--tx3);font-family:var(--fM);font-size:7px;cursor:pointer">limpiar</button>
+          </div>
+        </div>
+        <div style="flex:1;padding:8px 12px">
+          <div style="font-family:var(--fM);font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px">Mapa B</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--cya)"></div>
+            <span id="cntB" style="font-family:var(--fD);font-size:16px;color:var(--tx);line-height:1">0</span>
+            <span style="font-family:var(--fM);font-size:7.5px;color:var(--tx3)">capas</span>
+            <button onclick="clearAllCmp('B')" style="margin-left:auto;padding:2px 7px;border:1px solid var(--ln);border-radius:4px;background:none;color:var(--tx3);font-family:var(--fM);font-size:7px;cursor:pointer">limpiar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sync -->
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--ln);flex-shrink:0;background:var(--bg)">
+        <span style="font-family:var(--fM);font-size:7px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase">Sincronizar navegación</span>
+        <button id="syncBtn" onclick="toggleSync()" style="margin-left:auto;padding:3px 10px;border:1px solid rgba(0,201,212,.3);border-radius:20px;background:rgba(0,201,212,.1);color:var(--cya);font-family:var(--fM);font-size:7.5px;cursor:pointer">ON</button>
+      </div>
+
+      <!-- Instruction -->
+      <div style="font-family:var(--fM);font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);padding:6px 12px 4px;border-bottom:1px solid var(--ln);flex-shrink:0">
+        👁 A &nbsp;/&nbsp; 👁 B &nbsp;—&nbsp; activa en mapa A o B independientemente
+      </div>
+      <button class="clear-btn" style="margin-top:7px" onclick="clearCompare()">✕ Limpiar todo — Comparar (A + B)</button>
+
+      <div class="lb" id="lb-compare"></div>
+    </div>
+
+    <!-- ── ANÁLISIS ── -->
+    <div class="sub-panel" id="panel-analysis">
+      <button class="clear-btn" style="margin-top:7px;margin-bottom:2px" onclick="clearAnalysis()">✕ Limpiar todo — Análisis</button>
+      <div class="an-body">
+
+        <!-- TOOL 1: Buffer -->
+        <div class="an-tool open" id="anT1">
+          <div class="an-hd" onclick="togTool('anT1')">
+            <div class="an-hd-ico">🎯</div>
+            <div style="flex:1;min-width:0"><div class="an-hd-name">Buffer de Proximidad</div><div class="an-hd-desc">Zona de influencia y conteo de capas</div></div>
+            <span class="an-arr">▶</span>
+          </div>
+          <div class="an-content">
+            <div class="an-info">Genera buffers alrededor de una capa y cuenta cuántos elementos de otras capas caen dentro del radio definido.</div>
+            <div class="an-lbl">Capa origen</div>
+            <select class="an-sel" id="bufLayer"></select>
+            <div class="an-lbl">Radio de influencia (metros)</div>
+            <div class="an-rrow"><label>50 m</label><input type="range" id="bufR" min="50" max="1000" step="50" value="200" oninput="document.getElementById('bufRv').textContent=this.value+'m'"><span class="an-rv" id="bufRv">200m</span></div>
+            <button class="an-run red" id="bufBtn" onclick="runBuffer()">▶ Ejecutar buffer</button>
+            <button class="an-run muted" id="bufClear" onclick="clearBuffer()" style="display:none">✕ Limpiar buffer del mapa</button>
+            <div class="an-res" id="bufRes" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- TOOL 2: Correlacion -->
+        <div class="an-tool" id="anT2">
+          <div class="an-hd" onclick="togTool('anT2')">
+            <div class="an-hd-ico">🔗</div>
+            <div style="flex:1;min-width:0"><div class="an-hd-name">Correlación Espacial</div><div class="an-hd-desc">Distancia entre dos capas de puntos</div></div>
+            <span class="an-arr">▶</span>
+          </div>
+          <div class="an-content">
+            <div class="an-info">Calcula la proximidad real entre dos capas: distancia promedio, mínima y distribución por rangos de distancia.</div>
+            <div class="an-lbl">Capa A (origen)</div>
+            <select class="an-sel" id="corrA"></select>
+            <div class="an-lbl">Capa B (destino)</div>
+            <select class="an-sel" id="corrB"></select>
+            <div class="an-lbl">Radio de busqueda (metros)</div>
+            <div class="an-rrow"><label>50 m</label><input type="range" id="corrR" min="50" max="1000" step="50" value="300" oninput="document.getElementById('corrRv').textContent=this.value+'m'" style="accent-color:var(--cya)"><span class="an-rv" id="corrRv">300m</span></div>
+            <button class="an-run cya" id="corrBtn" onclick="runCorrelate()">▶ Calcular correlacion</button>
+            <div class="an-res" id="corrRes" style="display:none"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="mapwrap" id="mw">
+    <div class="maps-grid" id="mapsGrid">
+      <div id="map"></div>
+      <div id="map2"></div>
+    </div>
+    <div class="split-line"></div>
+    <div class="map-badge a" id="badgeA">Mapa A</div>
+    <div class="map-badge b" id="badgeB">Mapa B</div>
+    <div class="leg-strip"  id="legStrip"><div class="leg-h" id="legH">—</div><div id="legB"></div></div>
+    <div class="leg2-strip" id="leg2Strip"><div class="leg-h" id="leg2H">—</div><div id="leg2B"></div></div>
+    <div id="ldr"><div class="ldr-t">Cargando datos espaciales</div><div class="ldr-bar"><div class="ldr-f"></div></div></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="rp" id="rp">
+    <div class="rp-hd">
+      <div class="rp-ico" id="rpIco"></div>
+      <div><div class="rp-ttl" id="rpTtl">Estadisticas</div><div class="rp-src" id="rpSrc"></div></div>
+      <button class="rp-x" onclick="closeRP()">✕</button>
+    </div>
+    <div class="rp-bd" id="rpBd"></div>
+  </div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+<script>
+const API = "http://localhost:8000";
+const MAX_LAYERS = 5;
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let map1, map2;
+let maskLayer=null, boundaryLayer=null, maskLayer2=null, boundaryLayer2=null;
+let activeLayers  = {};
+let openFolders   = new Set(); // all folders closed by default
+let viewMode      = "explore";
+let cmpLayersA={}, cmpLayersB={};  // id → {hl,gl} per map side
+let showHeat=true, showPts=false, showMask=true;
+let syncOn=false;
+let sRadius=30, sIntensity=0.8, sBlur=18;
+let LAYER_CATALOG = {};
+let analysisLayers= [];
+let bufferLeaflet = null;
+let filterHeat    = null;
+
+// ── MAPS ──────────────────────────────────────────────────────────────────────
+function initMaps(){
+  const tile="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  const opts={attribution:"OSM CARTO",maxZoom:19};
+  const c=[4.5605,-74.1220],z=15;
+  map1=L.map("map",{zoomControl:true}).setView(c,z);
+  // map2 is always initialized — container stays in DOM with width:0
+  // so Leaflet never loses its internal size reference
+  map2=L.map("map2",{zoomControl:false,attributionControl:false}).setView(c,z);
+  L.tileLayer(tile,opts).addTo(map1);
+  L.tileLayer(tile,opts).addTo(map2);
+
+  // Sync using moveend to avoid constant redraws during pan (was causing jank)
+  // Lock flag prevents infinite loop between the two handlers
+  let _syncing=false;
+  function syncView(src,dst){
+    if(!syncOn||_syncing) return;
+    _syncing=true;
+    dst.setView(src.getCenter(),src.getZoom(),{animate:false,noMoveStart:true});
+    _syncing=false;
+  }
+  map1.on("moveend zoomend", ()=>syncView(map1,map2));
+  map2.on("moveend zoomend", ()=>syncView(map2,map1));
+}
+
+async function loadTerr(){
+  try{
+    const rb=await fetch(`${API}/territory/geojson`);
+    const db=await rb.json();
+    const bs={color:"#FF3860",weight:2,opacity:.8,fill:false};
+    boundaryLayer=L.geoJSON(db.geojson,{style:bs}).addTo(map1);
+    boundaryLayer2=L.geoJSON(db.geojson,{style:bs}).addTo(map2);
+    const rm=await fetch(`${API}/territory/mask`);
+    const dm=await rm.json();
+    const ms={color:"transparent",fillColor:"#06070D",fillOpacity:.72,weight:0};
+    maskLayer=L.geoJSON(dm.geojson,{style:ms}).addTo(map1);
+    maskLayer2=L.geoJSON(dm.geojson,{style:ms}).addTo(map2);
+    if(boundaryLayer.getBounds().isValid())map1.fitBounds(boundaryLayer.getBounds().pad(.08));
+  }catch(e){console.warn("Terr:",e)}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function grad(hex){if(!hex||!hex.startsWith("#"))hex="#FF3860";return{0.1:"#00006F",0.3:hex+"44",0.6:hex+"99",0.85:hex+"CC",1.0:hex}}
+function hashColor(str){if(!str)return null;let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h)^str.charCodeAt(i);return`hsl(${Math.abs(h)%360},55%,48%)`}
+function fmtNum(n){return n!=null?Math.round(n).toLocaleString():"—"}
+
+function mkHeat(data,mp){
+  if(!data.points||!data.points.length)return null;
+  return L.heatLayer(data.points.map(([la,lo])=>[la,lo,sIntensity]),{radius:sRadius,blur:sBlur,max:1,gradient:grad(data.color)}).addTo(mp);
+}
+function mkPts(data,mp){
+  if(!data.points||!data.points.length)return null;
+  const g=L.layerGroup();
+  data.points.forEach(([la,lo])=>{L.circleMarker([la,lo],{radius:4,color:data.color,fillColor:data.color,fillOpacity:.75,weight:1}).addTo(g)});
+  return g.addTo(mp);
+}
+function mkGeoLayer(data,mp){
+  const color=data.color||"#6366F1";
+  const cf=data.color_field, isLine=data.type==="line";
+  const valMap={};
+  if(cf&&data.geojson?.features){
+    [...new Set(data.geojson.features.map(f=>f.properties?.[cf]).filter(Boolean))].forEach(v=>{valMap[v]=hashColor(v)});
+  }
+  const style=feat=>{let c=color;if(cf&&feat.properties?.[cf])c=valMap[feat.properties[cf]]||color;return isLine?{color:c,weight:2.5,opacity:.85}:{color:c,weight:1,opacity:.7,fillColor:c,fillOpacity:.3}};
+  return L.geoJSON(data.geojson,{style,onEachFeature:(feature,layer)=>{
+    const p=feature.properties||{};
+    const catVal=cf?p[cf]:null;
+    const layerColor=cf&&catVal?(valMap[catVal]||color):color;
+    const areaM2=p["_area_m2"], lenM=p["_length_m"];
+    let tt=`<div style="background:#0C0E1A;border:1px solid #2C344F;border-radius:8px;padding:9px 12px;font-family:'Space Mono',monospace;min-width:170px;border-left:3px solid ${layerColor}">`;
+    if(catVal)tt+=`<div style="font-family:'Archivo Black',sans-serif;font-size:12px;color:${layerColor};margin-bottom:4px">${catVal}</div>`;
+    tt+=`<div style="font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:#4A5278;margin-bottom:7px">${data.label||""}</div>`;
+    if(!isLine&&areaM2!=null){
+      tt+=`<div style="font-size:7px;color:#8B96BA">Area</div>`;
+      tt+=`<div style="font-family:'Archivo Black',sans-serif;font-size:16px;color:${layerColor}">${fmtNum(areaM2)} m²</div>`;
+      if(areaM2>=10000)tt+=`<div style="font-size:7px;color:#4A5278">${(areaM2/10000).toFixed(3)} ha</div>`;
+    }
+    if(isLine&&lenM!=null){
+      tt+=`<div style="font-size:7px;color:#8B96BA">Longitud</div>`;
+      tt+=`<div style="font-family:'Archivo Black',sans-serif;font-size:16px;color:${layerColor}">${fmtNum(lenM)} m</div>`;
+      if(lenM>=1000)tt+=`<div style="font-size:7px;color:#4A5278">${(lenM/1000).toFixed(3)} km</div>`;
+    }
+    tt+=`</div>`;
+    layer.bindTooltip(tt,{sticky:true,opacity:1,direction:"auto",offset:[12,0],className:"geo-tt"});
+    layer.on("mouseover",function(){this.setStyle(isLine?{weight:4,opacity:1}:{fillOpacity:.55,weight:2,opacity:1});this.bringToFront()});
+    layer.on("mouseout",function(e){let c2=color;if(cf&&e.target.feature.properties?.[cf])c2=valMap[e.target.feature.properties[cf]]||color;this.setStyle(isLine?{color:c2,weight:2.5,opacity:.85}:{color:c2,weight:1,opacity:.7,fillColor:c2,fillOpacity:.3})});
+  }}).addTo(mp);
+}
+function clrLayer(l,mp){if(l)try{mp.removeLayer(l)}catch(e){}}
+
+// ── MODE SWITCHING ─────────────────────────────────────────────────────────────
+function setMode(m){
+  const prev=viewMode;
+  viewMode=m;
+  ["explore","compare","analysis"].forEach(x=>{
+    document.getElementById(`tab-${x}`).classList.toggle("on",x===m);
+    document.getElementById(`panel-${x}`).classList.toggle("show",x===m);
+  });
+  const grid=document.getElementById("mapsGrid");
+
+  // Show/hide heat controls: visible in explore+compare, hidden in analysis
+  const hc = document.getElementById("heat-controls");
+  if(hc) hc.style.display = m==="analysis" ? "none" : "flex";
+
+  if(m==="compare"){
+    grid.classList.add("split");
+    syncOn=true;
+    setTimeout(()=>{
+      map1.invalidateSize({animate:false,pan:false});
+      map2.invalidateSize({animate:false,pan:false});
+      map2.setView(map1.getCenter(),map1.getZoom(),{animate:false});
+    },280);
+  }else{
+    syncOn=false;
+    grid.classList.remove("split");
+    if(prev==="compare"){
+      clearAllCmp("A");
+      clearAllCmp("B");
+      setTimeout(()=>{ map1.invalidateSize({animate:false,pan:false}); },280);
+    }
+  }
+}
+
+// ── SYNC TOGGLE ──────────────────────────────────────────────────────────────
+function toggleSync(){
+  syncOn=!syncOn;
+  const btn=document.getElementById("syncBtn");
+  if(btn){
+    btn.textContent=syncOn?"ON":"OFF";
+    btn.style.borderColor=syncOn?"rgba(0,201,212,.3)":"var(--ln)";
+    btn.style.background=syncOn?"rgba(0,201,212,.1)":"none";
+    btn.style.color=syncOn?"var(--cya)":"var(--tx3)";
+  }
+  if(syncOn) map2.setView(map1.getCenter(),map1.getZoom(),{animate:false});
+}
+
+// ── EXPLORE: LAYER TOGGLE ─────────────────────────────────────────────────────
+function toggleFolder(mId){const el=document.getElementById(`mf-${mId}`);if(!el)return;if(openFolders.has(mId)){openFolders.delete(mId);el.classList.remove("open")}else{openFolders.add(mId);el.classList.add("open")}}
+
+async function toggleLayer(id){
+  const cfg=LAYER_CATALOG[id]; if(!cfg)return;
+  if(activeLayers[id]){
+    clrLayer(activeLayers[id].leafletLayer,map1);
+    clrLayer(activeLayers[id].ptLayer,map1);
+    delete activeLayers[id];
+    refreshRow(id);updateCounter();buildLegend();return;
+  }
+  if(Object.keys(activeLayers).length>=MAX_LAYERS){showToast(`Maximo ${MAX_LAYERS} capas`);return}
+  activeLayers[id]={leafletLayer:null};refreshRow(id);updateCounter();
+  try{
+    if(cfg.type==="point"){
+      const d=await fetch(`${API}/layer/${id}/points`).then(r=>r.json());
+      const el=document.getElementById(`ct-${id}`);if(el)el.textContent=`${d.count} reg.`;
+      activeLayers[id].pointData=d;
+      if(showHeat)activeLayers[id].leafletLayer=mkHeat(d,map1);
+      if(showPts)activeLayers[id].ptLayer=mkPts(d,map1);
+    }else{
+      const d=await fetch(`${API}/layer/${id}/geojson`).then(r=>r.json());
+      activeLayers[id].geoData=d;
+      activeLayers[id].leafletLayer=mkGeoLayer(d,map1);
+    }
+  }catch(e){console.error(id,e);delete activeLayers[id];showToast(`Error: ${cfg.label}`)}
+  refreshRow(id);updateCounter();buildLegend();
+  if(cfg.has_stats&&activeLayers[id])loadRP(id,cfg.label,cfg.icon,cfg.color);
+}
+
+function refreshActiveLayers(){
+  // Explore layers (map1)
+  Object.entries(activeLayers).forEach(([id,state])=>{
+    const cfg=LAYER_CATALOG[id];if(!cfg||cfg.type!=="point")return;
+    clrLayer(state.leafletLayer,map1);clrLayer(state.ptLayer,map1);
+    state.leafletLayer=null;state.ptLayer=null;
+    if(state.pointData){
+      if(showHeat)state.leafletLayer=mkHeat(state.pointData,map1);
+      if(showPts)state.ptLayer=mkPts(state.pointData,map1);
+    }
+  });
+  // Compare layers — re-render heat + points with new slider values
+  [[map1,cmpLayersA],[map2,cmpLayersB]].forEach(([mp,dict])=>{
+    Object.entries(dict).forEach(([id,st])=>{
+      const cfg=LAYER_CATALOG[id]; if(!cfg||cfg.type!=="point") return;
+      clrLayer(st.hl,  mp); st.hl  = null;
+      clrLayer(st.ptl, mp); st.ptl = null;
+      if(st.pointData){
+        st.hl  = showHeat ? mkHeat(st.pointData, mp) : null;
+        st.ptl = showPts  ? mkPts(st.pointData,  mp) : null;
+      }
+    });
+  });
+}
+
+function togHeat(){showHeat=!showHeat;document.getElementById("hHeat").classList.toggle("on",showHeat);refreshActiveLayers()}
+function togPts(){showPts=!showPts;document.getElementById("hPts").classList.toggle("on",showPts);refreshActiveLayers()}
+function togMask(){
+  showMask=!showMask;document.getElementById("hMask").classList.toggle("on",showMask);
+  [[maskLayer,map1],[maskLayer2,map2]].forEach(([l,mp])=>{if(!l)return;try{showMask?l.addTo(mp):mp.removeLayer(l)}catch(e){}});
+}
+function onSR(v){sRadius=parseInt(v);document.getElementById("vR").textContent=v;refreshActiveLayers()}
+function onSI(v){sIntensity=parseFloat(v);document.getElementById("vI").textContent=parseFloat(v).toFixed(2);refreshActiveLayers()}
+function onSB(v){sBlur=parseInt(v);document.getElementById("vB").textContent=v;refreshActiveLayers()}
+
+function refreshRow(id){
+  const cfg=LAYER_CATALOG[id],isActive=!!activeLayers[id];
+  const row=document.getElementById(`lr-${id}`),btn=document.getElementById(`eye-${id}`);
+  if(!row||!btn)return;
+  row.classList.toggle("active",isActive);row.style.setProperty("--lc",cfg.color);
+  btn.classList.toggle("on",isActive);btn.style.setProperty("--lc",cfg.color);btn.textContent=isActive?"👁":"○";
+  const modActN=document.getElementById(`mact-${cfg.module}`);
+  if(modActN){const n=Object.keys(activeLayers).filter(lid=>LAYER_CATALOG[lid]?.module===cfg.module).length;modActN.textContent=n;modActN.classList.toggle("show",n>0)}
+}
+function updateCounter(){const n=Object.keys(activeLayers).length;document.getElementById("actN").textContent=n;for(let i=0;i<5;i++)document.getElementById(`d${i}`)?.classList.toggle("on",i<n)}
+
+// ── COMPARE ────────────────────────────────────────────────────────────────────
+// ── COMPARE: toggle layer on/off for a map side ──────────────────────────────
+async function toggleCmpLayer(side, id){
+  const cfg  = LAYER_CATALOG[id]; if(!cfg) return;
+  const mp   = side==="A" ? map1 : map2;
+  const dict = side==="A" ? cmpLayersA : cmpLayersB;
+
+  // Already active on this side → remove
+  if(dict[id]){
+    clrLayer(dict[id].hl,  mp);
+    clrLayer(dict[id].ptl, mp);
+    clrLayer(dict[id].gl,  mp);
+    delete dict[id];
+    refreshCmpRows();
+    updateCmpUI(side);
+    return;
+  }
+
+  // Activate
+  mp.invalidateSize({animate:false, pan:false});
+  dict[id] = {hl:null, gl:null};
+  refreshCmpRows(); // show loading state
+
+  try{
+    if(cfg.type==="point"){
+      const d = await fetch(`${API}/layer/${id}/points`).then(r=>r.json());
+      dict[id].pointData = d;              // always store for re-render
+      dict[id].hl  = showHeat ? mkHeat(d, mp) : null;
+      dict[id].ptl = showPts  ? mkPts(d, mp)  : null;
+    }else{
+      const d = await fetch(`${API}/layer/${id}/geojson`).then(r=>r.json());
+      dict[id].gl = mkGeoLayer(d, mp);
+    }
+  }catch(e){
+    delete dict[id];
+    showToast("Error cargando " + cfg.label);
+  }
+
+  refreshCmpRows();
+  updateCmpUI(side);
+  setTimeout(()=>mp.invalidateSize({animate:false, pan:false}), 120);
+}
+
+// Clear all layers from one side
+function clearAllCmp(side){
+  const dict = side==="A" ? cmpLayersA : cmpLayersB;
+  const mp   = side==="A" ? map1 : map2;
+  Object.values(dict).forEach(st=>{ clrLayer(st.hl,mp); clrLayer(st.ptl,mp); clrLayer(st.gl,mp); });
+  if(side==="A") cmpLayersA={};
+  else           cmpLayersB={};
+  refreshCmpRows();
+  updateCmpUI(side);
+}
+
+// Alias for setMode compatibility
+function clearCmpLayer(side){ clearAllCmp(side); }
+
+// Alias used by setMode when exiting compare
+// Update count badge + map badge + legend for one side
+function updateCmpUI(side){
+  const dict  = side==="A" ? cmpLayersA : cmpLayersB;
+  const n     = Object.keys(dict).length;
+  const cntEl = document.getElementById("cnt"+side);
+  if(cntEl) cntEl.textContent = n;
+  const badge = document.getElementById("badge"+side);
+  if(badge){
+    const names = Object.keys(dict).map(id=>LAYER_CATALOG[id]?.label||id);
+    badge.textContent = n===0 ? "Mapa "+side
+      : "Mapa "+side+" — "+names.slice(0,2).join(", ")+(names.length>2?" +"+(names.length-2):"");
+  }
+  // Legend
+  const strip = document.getElementById(side==="A" ? "legStrip" : "leg2Strip");
+  const hEl   = side==="A" ? "legH"  : "leg2H";
+  const bEl   = side==="A" ? "legB"  : "leg2B";
+  if(!n){ strip.style.display="none"; return; }
+  strip.style.display="block";
+  document.getElementById(hEl).textContent="Mapa "+side+" ("+n+")";
+  let html="";
+  Object.keys(dict).forEach(id=>{ const c=LAYER_CATALOG[id]; if(c) html+=buildLayerLegendHTML(id,c); });
+  html+=`<div class="leg-div"></div>
+    <div class="leg-row"><div class="sym-line" style="background:#FF3860;width:18px"></div><span>Límite El Playon</span></div>`;
+  document.getElementById(bEl).innerHTML=html;
+}
+
+// Refresh visual state of A/B buttons in the compare layer list
+function refreshCmpRows(){
+  Object.keys(LAYER_CATALOG).forEach(id=>{
+    const btnA=document.getElementById("cmpA-"+id);
+    const btnB=document.getElementById("cmpB-"+id);
+    if(btnA){
+      const on=!!cmpLayersA[id];
+      btnA.style.background   = on ? "rgba(255,56,96,.28)"  : "rgba(255,56,96,.06)";
+      btnA.style.borderColor  = on ? "#FF3860" : "rgba(255,56,96,.3)";
+      btnA.style.fontWeight   = on ? "bold" : "normal";
+      btnA.textContent = on ? "✓A" : "A";
+    }
+    if(btnB){
+      const on=!!cmpLayersB[id];
+      btnB.style.background   = on ? "rgba(0,201,212,.28)"  : "rgba(0,201,212,.06)";
+      btnB.style.borderColor  = on ? "#00C9D4" : "rgba(0,201,212,.3)";
+      btnB.style.fontWeight   = on ? "bold" : "normal";
+      btnB.textContent = on ? "✓B" : "B";
+    }
+  });
+}
+
+// ── LEGEND ─────────────────────────────────────────────────────────────────────
+function buildLegend(){
+  const ids=Object.keys(activeLayers);
+  const strip=document.getElementById("legStrip");
+  if(!ids.length){strip.style.display="none";return}
+  strip.style.display="block";document.getElementById("legH").textContent="Capas activas";
+  let html="";ids.forEach(id=>{const c=LAYER_CATALOG[id];if(c)html+=buildLayerLegendHTML(id,c)});
+  html+=`<div class="leg-div"></div><div class="leg-sec">Base</div><div class="leg-row"><div class="sym-line" style="background:#FF3860;width:18px"></div><span>Limite El Playon</span></div>`;
+  document.getElementById("legB").innerHTML=html;
+}
+function buildLayerLegendHTML(id,cfg){
+  let sym=cfg.type==="line"?`<div class="sym-line" style="background:${cfg.color};width:18px"></div>`:cfg.type==="polygon"?`<div class="sym-sq" style="background:${cfg.color}55;border:2px solid ${cfg.color};width:12px;height:9px"></div>`:`<div class="sym-circle" style="background:${cfg.color};width:9px;height:9px"></div>`;
+  let html=`<div class="leg-row">${sym}<span>${cfg.label}</span></div>`;
+  if(cfg.type==="point"){html+=`<div class="leg-sec">Intensidad calor</div><div class="leg-row"><div class="sym-grad" style="background:linear-gradient(to right,#00006F,${cfg.color})"></div><span>baja → alta</span></div>`}
+  if(cfg.type==="polygon"&&cfg.color_field){
+    const state=activeLayers[id],vals=state?.geoData?.geojson?.features?[...new Set(state.geoData.geojson.features.map(f=>f.properties?.[cfg.color_field]).filter(Boolean))]:[];
+    if(vals.length){html+=`<div class="leg-sec">${cfg.color_field}</div><div class="leg-catbox">`;vals.slice(0,10).forEach(v=>{const c=hashColor(v);html+=`<div class="leg-row" style="margin-bottom:3px"><div class="sym-sq" style="background:${c}55;border:1.5px solid ${c};width:10px;height:8px"></div><span style="font-size:7px">${v}</span></div>`});if(vals.length>10)html+=`<div style="font-family:var(--fM);font-size:6.5px;color:var(--tx3);margin-top:2px">+${vals.length-10} mas</div>`;html+=`</div>`}
+  }
+  return html;
+}
+
+// ── STATS PANEL ────────────────────────────────────────────────────────────────
+async function openStats(id){const cfg=LAYER_CATALOG[id];if(cfg)loadRP(id,cfg.label,cfg.icon,cfg.color)}
+async function loadRP(id,label,icon,color){
+  const r=await fetch(`${API}/layer/${id}/stats`).catch(()=>null);if(!r)return;
+  const data=await r.json();if(!data.stats){closeRP();return}
+  const s=data.stats;
+  document.getElementById("body").classList.add("rp-open");document.getElementById("rp").classList.add("show");
+  document.getElementById("rpIco").textContent=icon||"📊";document.getElementById("rpIco").style.background=`${color}20`;
+  document.getElementById("rpTtl").textContent=label;document.getElementById("rpSrc").textContent=`FUENTE: ${s.tot_table||"totalizadora"}`;
+  let html="";
+  if(s.cards?.length){html+=`<div class="ss"><div class="ss-lbl">Indicadores clave</div><div class="big-cards">`;s.cards.forEach(c=>{html+=`<div class="bc" style="--cc:${c.color}"><div class="bc-n">${c.value}</div><div class="bc-l">${c.label}</div></div>`});html+=`</div></div>`}
+  if(s.pills?.length){html+=`<div class="ss"><div class="ss-lbl">Contexto</div><div class="pills">`;s.pills.forEach(p=>{html+=`<div class="pill">${p.label}: <b>${p.value}</b></div>`});html+=`</div></div>`}
+  if(s.charts?.length){
+    const tabs=s.charts.map((ch,i)=>`<div class="chart-tab ${i===0?"on":""}" onclick="switchChart(${i},${s.charts.length})" style="--cc:${ch.color||color}">${ch.label}</div>`).join("");
+    html+=`<div class="ss" style="padding:0"><div style="padding:8px 12px 0"><div class="ss-lbl">Distribucion</div></div><div class="chart-tabs">${tabs}</div>`;
+    s.charts.forEach((ch,i)=>{
+      const mx=Math.max(...ch.data.map(d=>d.value),1);
+      html+=`<div class="chart-panel ${i===0?"on":""}" id="cp-${i}">`;
+      ch.data.forEach(d=>{const pct=Math.round(d.value/mx*100);html+=`<div class="brow"><div class="blbl">${d.label}</div><div class="btrk"><div class="bfil" style="width:${pct}%;background:linear-gradient(to right,${ch.color||color}44,${ch.color||color})"></div></div><div class="bval">${d.value}</div></div>`});
+      if(!ch.data.length)html+=`<div class="an-info">Sin datos</div>`;html+=`</div>`;
+    });html+=`</div>`;
+  }
+  document.getElementById("rpBd").innerHTML=html;
+}
+function switchChart(idx,total){for(let i=0;i<total;i++){document.getElementById(`cp-${i}`)?.classList.toggle("on",i===idx);document.querySelectorAll(".chart-tab")[i]?.classList.toggle("on",i===idx)}}
+function closeRP(){document.getElementById("body").classList.remove("rp-open");document.getElementById("rp").classList.remove("show")}
+
+// ── BUILD PANELS ──────────────────────────────────────────────────────────────
+// p = "" for explore, "c" for compare — ensures unique DOM IDs in both panels
+function buildPanel(modules,layers){
+  const byMod={};layers.forEach(l=>{if(!byMod[l.module])byMod[l.module]=[];byMod[l.module].push(l)});
+
+  // ── Explore panel ──────────────────────────────────────────────────────────
+  const lb=document.getElementById("lb");
+  if(lb){
+    lb.innerHTML=modules.map(mod=>{
+      const mLayers=byMod[mod.id]||[],isOpen=openFolders.has(mod.id);
+      const rows=mLayers.map(l=>{
+        const typeLbl=l.type==="point"?"Pto":l.type==="polygon"?"Pol":"Lin";
+        const statsBtn=l.has_stats?`<button class="stat-btn" onclick="openStats('${l.id}')" title="Ver estadísticas">📊</button>`:"";
+        const eyeBtn=`<button class="eye-btn" id="eye-${l.id}" style="--lc:${l.color}" onclick="toggleLayer('${l.id}')">○</button>`;
+        return`<div class="lrow2" id="lr-${l.id}" style="--lc:${l.color}">${eyeBtn}<div class="lico2" style="background:${l.color}18">${l.icon}</div><div style="flex:1;min-width:0"><div class="lnm2">${l.label}</div><div class="lct2" id="ct-${l.id}">—</div></div><span class="tbadge ${l.type}">${typeLbl}</span>${statsBtn}</div>`;
+      }).join("");
+      return`<div class="mod-folder ${isOpen?"open":""}" id="mf-${mod.id}">
+        <div class="mod-hd" onclick="toggleFolder('${mod.id}')">
+          <span class="mod-arrow">▶</span><span class="mod-ico">${mod.icon}</span>
+          <span class="mod-name" style="color:${mod.color}">${mod.id} — ${mod.label}</span>
+          <div class="mod-meta"><span class="mod-act-n" id="mact-${mod.id}">0</span><span class="mod-total">${mLayers.length}</span></div>
+        </div>
+        <div class="mod-body">${rows}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // ── Compare panel — IDs prefixed with "c" to avoid collisions ─────────────
+  const lbc=document.getElementById("lb-compare");
+  if(lbc){
+    lbc.innerHTML=modules.map(mod=>{
+      const mLayers=byMod[mod.id]||[];
+      // compare folders start open so user sees layers immediately
+      return`<div class="mod-folder" id="cmf-${mod.id}">
+        <div class="mod-hd" onclick="toggleFolderCmp('${mod.id}')">
+          <span class="mod-arrow">▶</span><span class="mod-ico">${mod.icon}</span>
+          <span class="mod-name" style="color:${mod.color}">${mod.id} — ${mod.label}</span>
+          <span class="mod-total" style="margin-left:auto">${mLayers.length}</span>
+        </div>
+        <div class="mod-body">${mLayers.map(l=>{
+          const typeLbl=l.type==="point"?"Pto":l.type==="polygon"?"Pol":"Lin";
+          return`<div class="lrow2" style="--lc:${l.color}">
+            <div class="lico2" style="background:${l.color}18">${l.icon}</div>
+            <div style="flex:1;min-width:0"><div class="lnm2">${l.label}</div></div>
+            <span class="tbadge ${l.type}">${typeLbl}</span>
+            <button class="cmp-add-btn A" id="cmpA-${l.id}" onclick="toggleCmpLayer('A','${l.id}')" title="Mapa A">A</button>
+            <button class="cmp-add-btn B" id="cmpB-${l.id}" onclick="toggleCmpLayer('B','${l.id}')" title="Mapa B">B</button>
+          </div>`;
+        }).join("")}</div>
+      </div>`;
+    }).join("");
+  }
+}
+
+// Separate folder toggle for the compare panel (uses cmf- prefix)
+function toggleFolderCmp(mId){
+  const el=document.getElementById("cmf-"+mId);
+  if(el) el.classList.toggle("open");
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────────────────────
+async function loadOverview(){
+  try{const r=await fetch(`${API}/overview`);const d=await r.json();const o=d.overview;
+  document.getElementById("kF").textContent=o.feminicidios||"—";document.getElementById("kC").textContent=o.consumados||"—";
+  document.getElementById("kM").textContent=o.microtrafico_activo||"—";document.getElementById("kI").textContent=o.incidentes||"—";
+  document.getElementById("kFa").textContent=o.fallas||"—";document.getElementById("kMed").textContent=o.medidas_incumplidas||"—";
+  }catch(e){}
+}
+async function preloadCounts(layers){
+  for(const l of layers){if(l.type!=="point")continue;try{const r=await fetch(`${API}/layer/${l.id}/points`);const d=await r.json();const el=document.getElementById(`ct-${l.id}`);if(el)el.textContent=`${d.count} reg.`}catch(e){}}
+}
+let toastTimer;
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3000)}
+
+// ── CLEAR ALL per tab ────────────────────────────────────────────────────────
+function clearExplore(){
+  // Remove all active layers from explore map
+  Object.keys(activeLayers).forEach(id=>{
+    const st=activeLayers[id];
+    clrLayer(st.leafletLayer,map1);
+    clrLayer(st.ptLayer,map1);
+  });
+  activeLayers={};
+  // Reset all eye buttons
+  Object.keys(LAYER_CATALOG).forEach(id=>{
+    const btn=document.getElementById("eye-"+id);
+    const row=document.getElementById("lr-"+id);
+    if(btn){btn.textContent="○";btn.classList.remove("on")}
+    if(row) row.classList.remove("active");
+  });
+  updateCounter();
+  buildLegend();
+  closeRP();
+  showToast("Explorar limpio ✓");
+}
+
+function clearCompare(){
+  clearAllCmp("A");
+  clearAllCmp("B");
+  showToast("Comparar limpio ✓");
+}
+
+function clearAnalysis(){
+  // Buffer
+  if(bufCircles){ try{map1.removeLayer(bufCircles)}catch(e){} bufCircles=null; }
+  document.getElementById("bufClear").style.display="none";
+  document.getElementById("bufRes").innerHTML="";
+  document.getElementById("bufRes").style.display="none";
+  // Correlación
+  document.getElementById("corrRes").innerHTML="";
+  document.getElementById("corrRes").style.display="none";
+  showToast("Análisis limpio ✓");
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ANÁLISIS GEOGRÁFICO — 100% cliente, sin cambio de modo
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── State de análisis ────────────────────────────────────────────────────────
+let anLayers      = [];       // catálogo /analysis/layers
+let bufCircles    = null;     // L.layerGroup de buffers
+let filterHL      = null;     // heatmap del filtro
+
+// ── Acordeón de herramientas ─────────────────────────────────────────────────
+function togTool(id) {
+  document.getElementById(id).classList.toggle("open");
+}
+
+// ── Helpers de UI ─────────────────────────────────────────────────────────────
+function setBtn(id, loading, label) {
+  const b = document.getElementById(id);
+  b.disabled = loading;
+  b.innerHTML = loading
+    ? '<span class="an-spin"></span>Calculando…'
+    : label;
+}
+
+function showRes(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html;
+  el.style.display = html ? "block" : "none";
+}
+
+function anCards(list) {
+  return '<div class="an-cards">' +
+    list.map(c =>
+      `<div class="an-card" style="--cc:${c.color}">
+         <div class="an-card-n">${c.value}</div>
+         <div class="an-card-l">${c.label}</div>
+       </div>`
+    ).join("") + '</div>';
+}
+
+function anBar(data, color) {
+  if (!data.length) return '<div class="an-info">Sin datos</div>';
+  const mx = Math.max(...data.map(d => d.value), 1);
+  return data.map(d => {
+    const pct = Math.round(d.value / mx * 100);
+    return `<div class="an-brow">
+      <div class="an-blbl">${d.label}</div>
+      <div class="an-btrk">
+        <div class="an-bfil" style="width:${pct}%;background:linear-gradient(to right,${color}55,${color})"></div>
+      </div>
+      <div class="an-bval">${d.value}</div>
+    </div>`;
+  }).join("");
+}
+
+// ── Haversine client-side (metros) ────────────────────────────────────────────
+function haversine(la1, lo1, la2, lo2) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLat = (la2 - la1) * r, dLon = (lo2 - lo1) * r;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(la1*r) * Math.cos(la2*r) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── Poblar selects de análisis ─────────────────────────────────────────────────
+async function loadAnalysisLayers() {
+  try {
+    const r = await fetch(`${API}/analysis/layers`);
+    const d = await r.json();
+    anLayers = d.layers;
+    ["bufLayer","corrA","corrB"].forEach(sid => {
+      const sel = document.getElementById(sid);
+      if (!sel) return;
+      sel.innerHTML = anLayers.map(l =>
+        `<option value="${l.id}">${l.label}</option>`
+      ).join("");
+    });
+    // corrB default a segunda opción
+    const cb = document.getElementById("corrB");
+    if (cb && cb.options.length > 1) cb.selectedIndex = 1;
+  } catch(e) { console.warn("anLayers:", e) }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// TOOL 1 — BUFFER DE PROXIMIDAD (client-side)
+// ──────────────────────────────────────────────────────────────────────────────
+async function runBuffer() {
+  const layerId = document.getElementById("bufLayer").value;
+  const radius  = parseInt(document.getElementById("bufR").value);
+  setBtn("bufBtn", true, "▶ Ejecutar buffer");
+  clearBuffer();
+
+  try {
+    // 1. Descarga puntos de la capa origen
+    const rA = await fetch(`${API}/layer/${layerId}/points`);
+    const dA = await rA.json();
+    if (!dA.points || !dA.points.length) {
+      showRes("bufRes", '<div class="an-info" style="color:var(--red)">La capa no tiene puntos.</div>');
+      setBtn("bufBtn", false, "▶ Ejecutar buffer"); return;
+    }
+
+    // 2. Dibuja círculos en el mapa (L.circle usa metros reales)
+    bufCircles = L.layerGroup().addTo(map1);
+    dA.points.forEach(([la, lo]) => {
+      L.circle([la, lo], {
+        radius, color: dA.color, fillColor: dA.color,
+        fillOpacity: 0.10, weight: 1.2, opacity: 0.6, dashArray: "4 3"
+      }).addTo(bufCircles);
+    });
+
+    // 3. Descarga todas las demás capas de análisis y cuenta intersecciones
+    const counts = [];
+    for (const other of anLayers) {
+      if (other.id === layerId) continue;
+      try {
+        const rB = await fetch(`${API}/layer/${other.id}/points`);
+        const dB = await rB.json();
+        let inside = 0;
+        for (const [laB, loB] of dB.points) {
+          for (const [laA, loA] of dA.points) {
+            if (haversine(laA, loA, laB, loB) <= radius) { inside++; break; }
+          }
+        }
+        if (inside > 0) counts.push({ label: other.label, color: other.color, value: inside });
+      } catch(e) {}
+    }
+    counts.sort((a,b) => b.value - a.value);
+
+    // 4. Muestra resultados
+    const total = counts.reduce((s,c) => s+c.value, 0);
+    let html = anCards([
+      { label: `Buffers de ${radius}m generados`, value: dA.points.length, color: dA.color },
+      { label: "Elementos totales dentro",        value: total,             color: "#10B981" },
+    ]);
+    if (counts.length) {
+      html += '<div class="an-chart-lbl">Intersecciones por capa</div>';
+      html += anBar(counts, dA.color);
+    } else {
+      html += '<div class="an-info">Ningún elemento de otras capas cae dentro del radio.</div>';
+    }
+    showRes("bufRes", html);
+    document.getElementById("bufClear").style.display = "block";
+
+    // Centra mapa en los resultados
+    if (bufCircles.getLayers().length) map1.fitBounds(bufCircles.getLayers()[0].getBounds().pad(0.3));
+  } catch(e) {
+    showRes("bufRes", `<div class="an-info" style="color:var(--red)">Error: ${e.message}</div>`);
+  }
+  setBtn("bufBtn", false, "▶ Ejecutar buffer");
+}
+
+function clearBuffer() {
+  if (bufCircles) { try { map1.removeLayer(bufCircles) } catch(e) {} bufCircles = null; }
+  document.getElementById("bufClear").style.display = "none";
+  showRes("bufRes", "");
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// TOOL 2 — CORRELACIÓN ESPACIAL (client-side)
+// ──────────────────────────────────────────────────────────────────────────────
+async function runCorrelate() {
+  const idA   = document.getElementById("corrA").value;
+  const idB   = document.getElementById("corrB").value;
+  const radius= parseInt(document.getElementById("corrR").value);
+  if (idA === idB) {
+    showRes("corrRes", '<div class="an-info" style="color:var(--red)">Selecciona capas distintas.</div>');
+    return;
+  }
+  setBtn("corrBtn", true, "▶ Calcular correlación");
+  showRes("corrRes", "");
+
+  try {
+    const [rA, rB] = await Promise.all([
+      fetch(`${API}/layer/${idA}/points`).then(r => r.json()),
+      fetch(`${API}/layer/${idB}/points`).then(r => r.json()),
+    ]);
+    const ptsA = rA.points, ptsB = rB.points;
+    if (!ptsA.length || !ptsB.length) {
+      showRes("corrRes", '<div class="an-info" style="color:var(--red)">Una o ambas capas no tienen puntos.</div>');
+      setBtn("corrBtn", false, "▶ Calcular correlación"); return;
+    }
+
+    // Para cada punto A: distancia al B más cercano
+    const dists = ptsA.map(([laA, loA]) => {
+      let minD = Infinity;
+      for (const [laB, loB] of ptsB) {
+        const d = haversine(laA, loA, laB, loB);
+        if (d < minD) minD = d;
+      }
+      return minD;
+    });
+
+    const avg    = dists.reduce((s, d) => s + d, 0) / dists.length;
+    const minD   = Math.min(...dists);
+    const sorted = [...dists].sort((a,b)=>a-b);
+    const median = sorted[Math.floor(sorted.length/2)];
+    const nearby = dists.filter(d => d <= radius).length;
+
+    // Distribución por rangos
+    const buckets = [[0,100,"0–100 m"],[100,250,"100–250 m"],[250,500,"250–500 m"],[500,Infinity,"> 500 m"]];
+    const distChart = buckets.map(([lo, hi, lbl]) => ({
+      label: lbl, value: dists.filter(d => d >= lo && d < hi).length, color: rA.color
+    }));
+
+    const cfgA = anLayers.find(l=>l.id===idA)||{color:"#FF3860",label:idA};
+    const cfgB = anLayers.find(l=>l.id===idB)||{color:"#00C9D4",label:idB};
+
+    let html = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:9px;font-family:var(--fM);font-size:8px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${cfgA.color}"></div>
+      <span style="color:var(--tx2)">${cfgA.label}</span>
+      <span style="color:var(--tx3)">→</span>
+      <div style="width:8px;height:8px;border-radius:50%;background:${cfgB.color}"></div>
+      <span style="color:var(--tx2)">${cfgB.label}</span>
+    </div>`;
+    html += anCards([
+      { label: `Puntos A con B a ≤ ${radius}m`,  value: nearby,                  color: cfgA.color },
+      { label: "% del total A",                   value: Math.round(nearby/ptsA.length*100)+"%", color: "#FF9500" },
+      { label: "Distancia promedio",               value: Math.round(avg)+"m",     color: cfgB.color },
+      { label: "Distancia mínima",                 value: Math.round(minD)+"m",    color: "#10B981" },
+      { label: "Mediana de distancias",            value: Math.round(median)+"m",  color: "#8B5CF6" },
+      { label: "Total pares calculados",           value: ptsA.length,             color: "#4A5278" },
+    ]);
+    html += '<div class="an-chart-lbl">Distribución A → B más cercano</div>';
+    html += anBar(distChart, cfgA.color);
+    showRes("corrRes", html);
+  } catch(e) {
+    showRes("corrRes", `<div class="an-info" style="color:var(--red)">Error: ${e.message}</div>`);
+  }
+  setBtn("corrBtn", false, "▶ Calcular correlación");
+}
+
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init(){
+  initMaps();
+  try{
+    const r=await fetch(`${API}/layers`);
+    const d=await r.json();
+    d.layers.forEach(l=>{LAYER_CATALOG[l.id]=l});
+    buildPanel(d.modules,d.layers);
+    updateCounter();
+    await loadTerr();
+    await loadOverview();
+    document.getElementById("apiD").className="api-d ok";
+    document.getElementById("apiL").textContent="conectado";
+    document.getElementById("ldr").style.display="none";
+    document.getElementById("hHeat").classList.add("on");
+    document.getElementById("hMask").classList.add("on");
+    preloadCounts(d.layers);
+    // Load analysis layers + filter options
+    await loadAnalysisLayers();
+  }catch(e){
+    document.getElementById("ldr").innerHTML=`<div class="ldr-t" style="color:var(--red)">Error de conexion</div><div style="font-family:var(--fM);font-size:8px;color:var(--tx3);margin-top:5px">${e.message}</div>`;
+    document.getElementById("apiD").className="api-d err";
+    document.getElementById("apiL").textContent="sin conexion";
+    console.error(e);
+  }
+}
+init();
+</script>
+</body>
+</html>
